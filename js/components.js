@@ -1,26 +1,126 @@
 // ===== SHARED COMPONENTS =====
 
+let _mobileMenuOpen = false;
+
 function renderNavbar() {
   const pages = [
-    { id:'search', label:'🔍 Cari' },
-    { id:'package', label:'📦 Package Builder' },
-    { id:'booking', label:'📅 Booking' },
-    { id:'productivity', label:'⚡ Productivity' },
-    { id:'review', label:'⭐ Review' },
+    { id:'search',       label:'Cari Tempat',     icon:'🔍' },
+    { id:'package',      label:'Package Builder',  icon:'📦' },
+    { id:'booking',      label:'Booking',          icon:'📅' },
+    { id:'productivity', label:'Productivity',     icon:'⚡' },
+    { id:'review',       label:'Review',           icon:'⭐' },
   ];
+
   const nav = el('nav', 'navbar');
   nav.innerHTML = `
     <a class="navbar-brand" onclick="navigate('search')">
       GLOW<span>Gunung Kidul Location for Work</span>
     </a>
     <ul class="navbar-nav">
-      ${pages.map(p => `<li><a class="${State.currentPage===p.id?'active':''}" onclick="navigate('${p.id}')">${p.label}</a></li>`).join('')}
+      ${pages.map(p => `<li><a class="${State.currentPage===p.id?'active':''}" onclick="navigate('${p.id}')">${p.icon} ${p.label}</a></li>`).join('')}
     </ul>
     <div class="navbar-actions">
       <button class="btn btn-primary btn-sm" onclick="navigate('booking')">Booking →</button>
+      <button class="hamburger" id="hamburger-btn" onclick="toggleMobileMenu()" aria-label="Buka Menu" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
     </div>
   `;
+
+  // === Backdrop — langsung ke body, bukan ke nav ===
+  // (nav punya height:64px fixed yang akan meng-clip elemen child)
+  document.getElementById('drawer-backdrop')?.remove();
+  const backdrop = el('div', 'drawer-backdrop');
+  backdrop.id = 'drawer-backdrop';
+  backdrop.setAttribute('aria-hidden', 'true');
+  backdrop.onclick = () => toggleMobileMenu();
+  document.body.appendChild(backdrop);
+
+  // === Side Drawer — langsung ke body ===
+  document.getElementById('mobile-drawer')?.remove();
+  const drawer = el('div', 'mobile-drawer');
+  drawer.id = 'mobile-drawer';
+  drawer.setAttribute('aria-label', 'Navigasi');
+  drawer.innerHTML = `
+    <!-- Header / Brand -->
+    <div class="drawer-header">
+      <span style="font-size:1.5rem">🏔️</span>
+      <div>
+        <span class="drawer-brand">GLOW</span>
+        <span class="drawer-brand-sub">Gunung Kidul Location for Work</span>
+      </div>
+    </div>
+
+    <!-- Nav links -->
+    <nav class="drawer-nav">
+      ${pages.map(p => `
+        <button class="drawer-link ${State.currentPage===p.id?'active':''}" onclick="navigate('${p.id}');toggleMobileMenu()" aria-label="${p.label}">
+          <span class="dl-icon">${p.icon}</span>
+          <span>${p.label}</span>
+        </button>
+      `).join('')}
+      <div class="drawer-divider"></div>
+      <button class="drawer-link" onclick="toggleMobileMenu()" style="opacity:0.55;font-size:0.85rem">
+        <span class="dl-icon" style="font-size:0.9rem">✕</span>
+        <span>Tutup Menu</span>
+      </button>
+    </nav>
+
+    <!-- Footer CTA -->
+    <div class="drawer-footer">
+      <button class="drawer-cta" onclick="navigate('booking');toggleMobileMenu()">
+        📅 Pesan Sekarang
+      </button>
+    </div>
+  `;
+  document.body.appendChild(drawer);
+
   return nav;
+}
+
+function toggleMobileMenu() {
+  _mobileMenuOpen = !_mobileMenuOpen;
+  const btn      = document.getElementById('hamburger-btn');
+  const drawer   = document.getElementById('mobile-drawer');
+  const backdrop = document.getElementById('drawer-backdrop');
+
+  if (btn) {
+    btn.classList.toggle('open', _mobileMenuOpen);
+    btn.setAttribute('aria-expanded', _mobileMenuOpen);
+  }
+  if (drawer)   drawer.classList.toggle('open', _mobileMenuOpen);
+  if (backdrop) backdrop.classList.toggle('open', _mobileMenuOpen);
+
+  document.body.style.overflow = _mobileMenuOpen ? 'hidden' : '';
+}
+
+function renderBottomNav() {
+  const items = [
+    { id:'search',       icon:'🔍', label:'Cari' },
+    { id:'package',      icon:'📦', label:'Paket' },
+    { id:'booking',      icon:'📅', label:'Booking', special: true },
+    { id:'productivity', icon:'⚡',  label:'Kerja' },
+    { id:'review',       icon:'⭐',  label:'Review' },
+  ];
+
+  const nav = el('div', 'bottom-nav');
+  nav.id = 'bottom-nav';
+  nav.innerHTML = `
+    <div class="bottom-nav-inner">
+      ${items.map(item => item.special ? `
+        <button class="bottom-nav-item bn-booking" onclick="navigate('${item.id}')" aria-label="${item.label}">
+          <div class="bn-icon-wrap">${item.icon}</div>
+          <span class="bn-label">${item.label}</span>
+        </button>
+      ` : `
+        <button class="bottom-nav-item ${State.currentPage===item.id?'active':''}" onclick="navigate('${item.id}')" aria-label="${item.label}">
+          <span class="bn-icon">${item.icon}</span>
+          <span class="bn-label">${item.label}</span>
+        </button>
+      `).join('')}
+    </div>
+  `;
+  document.body.appendChild(nav);
 }
 
 function renderItemCard(item, compact=false) {
