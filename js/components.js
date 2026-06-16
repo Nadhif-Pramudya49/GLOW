@@ -233,7 +233,8 @@ function openDetail(id, cat) {
 }
 
 function addToPackage(id, cat) {
-  const item = DATA[cat].find(x => x.id === id);
+  const source = (typeof API_DATA !== 'undefined' && API_DATA) ? API_DATA : DATA;
+  const item = source[cat].find(x => x.id === id);
   if (!item) return;
   const pkg = State.package;
   if (cat === 'penginapan') {

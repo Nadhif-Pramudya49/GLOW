@@ -1,6 +1,7 @@
 // ===== PAGE: SEARCH =====
 
 let mapInstance = null;
+let API_DATA = null; // Store for fetched API data
 let searchState = {
   query: '', category: 'penginapan',
   budget: [100000, 1500000], wifi: 0,
@@ -10,8 +11,63 @@ let searchState = {
   sortBy: 'rating',   // 'rating' | 'price_asc' | 'price_desc'
 };
 
-function renderSearchPage() {
+async function renderSearchPage() {
   const page = el('div', 'page fade-in');
+
+  // Fetch data if not already fetched
+  if (!API_DATA) {
+    page.innerHTML = `<div style="text-align:center;padding:5rem;color:var(--gray-400)">
+      <div class="loader mb-3"></div>
+      <p>Mengambil data lokasi dari Gunung Kidul...</p>
+    </div>`;
+    
+    try {
+      const response = await fetch('http://localhost:3001/api/locations');
+      if (!response.ok) throw new Error('Gagal mengambil data');
+      const rawData = await response.json();
+      
+      // Transform API data to match existing DATA structure
+      API_DATA = {
+        penginapan: rawData.filter(i => i.category.toLowerCase().includes('beach') || i.category.toLowerCase().includes('hill') || i.category.toLowerCase().includes('penginapan')),
+        workspace: rawData.filter(i => i.category.toLowerCase().includes('cafe') || i.category.toLowerCase().includes('workspace')),
+        wisata: rawData.filter(i => i.category.toLowerCase().includes('wisata')),
+        kuliner: rawData.filter(i => i.category.toLowerCase().includes('kuliner'))
+      };
+      
+      // Map API fields to frontend fields
+      Object.keys(API_DATA).forEach(cat => {
+        API_DATA[cat] = API_DATA[cat].map(item => ({
+          ...item,
+          id: item.id.toString(),
+          category: cat, 
+          img: item.img || `https://picsum.photos/seed/${item.id}/800/600`,
+          price: parseFloat(item.packages?.[0]?.pricePerDay || 0),
+          unit: 'hari',
+          reviews: Math.floor(Math.random() * 50) + 10,
+          rating: (3.5 + Math.random() * 1.5).toFixed(1),
+          wifi: item.wifiSpeed,
+          facilities: item.hasPowerOutlet ? ['Colokan'] : [],
+          suasana: [item.category],
+          desc: item.description
+        }));
+      });
+
+      setTimeout(renderApp, 0);
+      return page;
+    } catch (error) {
+      console.error('API Fetch Error:', error);
+      if (typeof DATA !== 'undefined') {
+        API_DATA = DATA;
+        setTimeout(renderApp, 0);
+        return page;
+      }
+      page.innerHTML = `<div style="text-align:center;padding:5rem;color:var(--gray-400)">
+        <p>Gagal terhubung ke server. Pastikan backend berjalan di localhost:3001</p>
+        <button class="btn btn-primary mt-3" onclick="renderApp()">Coba Lagi</button>
+      </div>`;
+      return page;
+    }
+  }
 
   // Hero slides data
   const heroSlides = [
@@ -23,26 +79,17 @@ function renderSearchPage() {
   // Hero
   const hero = el('div', 'hero');
   hero.innerHTML = `
-    <!-- Slideshow background -->
     <div class="hero-slideshow" id="hero-slideshow">
       ${heroSlides.map((s, i) => `
         <div class="hero-slide ${i===0?'active':''}" style="background-image:url('${s.img}')" data-label="${s.label}"></div>
       `).join('')}
     </div>
-
-    <!-- Overlays -->
     <div class="hero-overlay"></div>
     <div class="hero-tint"></div>
-
-    <!-- Slide location label -->
     <div class="hero-slide-label visible" id="hero-slide-label">${heroSlides[0].label}</div>
-
-    <!-- Dot indicators -->
     <div class="hero-dots" id="hero-dots">
       ${heroSlides.map((_, i) => `<button class="hero-dot ${i===0?'active':''}" onclick="goToSlide(${i})" aria-label="Slide ${i+1}"></button>`).join('')}
     </div>
-
-    <!-- Content -->
     <div class="hero-content">
       <div style="display:inline-flex;align-items:center;gap:8px;background:rgba(245,166,35,0.2);border:1px solid rgba(245,166,35,0.4);border-radius:100px;padding:6px 16px;margin-bottom:1.5rem;font-size:0.875rem;color:var(--gold)">
         ✨ Workation Platform #1 di Gunung Kidul
@@ -63,10 +110,8 @@ function renderSearchPage() {
   `;
   page.appendChild(hero);
 
-  // Init slideshow after DOM is inserted
   setTimeout(initHeroSlideshow, 50);
 
-  // Inspiration toggle
   const inspBar = el('div', 'container', '');
   inspBar.style.cssText = 'padding-top:1.5rem;display:flex;justify-content:flex-end;gap:1rem';
   inspBar.innerHTML = `
@@ -84,29 +129,22 @@ function renderSearchPage() {
     return page;
   }
 
-  // Map
   if (searchState.showMap) {
     const mapSec = el('div', 'container mt-4');
     mapSec.innerHTML = `<div class="map-container"><div id="map"></div></div>`;
     page.appendChild(mapSec);
   }
 
-  // Main layout
   const main = el('div', 'container', '');
   main.style.cssText = 'padding-top:2rem;padding-bottom:4rem';
   const layout = el('div', 'sidebar-layout');
-
-  // Sidebar filter
   layout.appendChild(renderFilterSidebar());
-
-  // Results
   const results = el('div', '');
   results.appendChild(renderSearchResults());
   layout.appendChild(results);
   main.appendChild(layout);
   page.appendChild(main);
 
-  // Init map after render
   if (searchState.showMap) {
     setTimeout(initMap, 100);
   }
@@ -118,7 +156,6 @@ function renderFilterSidebar() {
   const sidebar = el('div', 'filter-sidebar');
   sidebar.innerHTML = `
     <div class="filter-title">🎛️ Filter Pencarian</div>
-
     <div class="filter-section">
       <div class="filter-section-label">Budget (per malam/hari)</div>
       <div id="budget-label" style="font-size:0.875rem;font-weight:600;color:var(--green);margin-bottom:8px">
@@ -128,11 +165,7 @@ function renderFilterSidebar() {
         value="${searchState.budget[0]}" oninput="updateBudget('min',this.value)" />
       <input type="range" class="range-slider" id="budget-max" min="100000" max="1500000" step="50000"
         value="${searchState.budget[1]}" oninput="updateBudget('max',this.value)" />
-      <div style="font-size:0.75rem;color:var(--gray-400);margin-top:4px">
-        Geser slider lalu klik Terapkan Filter
-      </div>
     </div>
-
     <div class="filter-section">
       <div class="filter-section-label">Kecepatan WiFi</div>
       ${[['0','Tidak perlu'],['10','> 10 Mbps'],['50','> 50 Mbps'],['100','> 100 Mbps']].map(([v,l])=>`
@@ -142,7 +175,6 @@ function renderFilterSidebar() {
         </label>
       `).join('')}
     </div>
-
     <div class="filter-section">
       <div class="filter-section-label">Suasana</div>
       <div class="flex flex-wrap gap-2">
@@ -151,15 +183,12 @@ function renderFilterSidebar() {
         `).join('')}
       </div>
     </div>
-
     <div class="filter-section">
       <div class="filter-section-label">Rating Minimum</div>
       <div class="star-input" id="rating-filter">
         ${[1,2,3,4,5].map(n=>`<span class="${n<=searchState.rating?'active':''}" onclick="setRatingFilter(${n})">★</span>`).join('')}
       </div>
-      <div style="font-size:0.75rem;color:var(--gray-400);margin-top:4px">${searchState.rating > 0 ? `≥ ${searchState.rating} bintang` : 'Semua rating'}</div>
     </div>
-
     <div class="filter-section">
       <div class="filter-section-label">Fasilitas</div>
       ${['Colokan','AC','Kolam Renang','Parkir','Spa','Guide'].map(f=>`
@@ -169,7 +198,6 @@ function renderFilterSidebar() {
         </label>
       `).join('')}
     </div>
-
     <button class="btn btn-secondary btn-full" onclick="applyFilters()">✅ Terapkan Filter</button>
     <button class="btn btn-ghost btn-full mt-2" onclick="resetFilters()">↺ Reset</button>
   `;
@@ -179,7 +207,6 @@ function renderFilterSidebar() {
 function renderSearchResults() {
   const wrap = el('div', '');
   const items = getFilteredItems();
-
   const header = el('div', 'flex items-center justify-between mb-3');
   header.innerHTML = `
     <div>
@@ -193,13 +220,9 @@ function renderSearchResults() {
     </select>
   `;
   wrap.appendChild(header);
-
   const grid = el('div', 'grid-3');
   if (items.length === 0) {
-    grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:3rem;color:var(--gray-400)">
-      <div style="font-size:3rem;margin-bottom:1rem">🔍</div>
-      <p>Tidak ada hasil ditemukan. Coba ubah filter.</p>
-    </div>`;
+    grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:3rem;color:var(--gray-400)"><p>Tidak ada hasil ditemukan.</p></div>`;
   } else {
     items.forEach(item => grid.appendChild(renderItemCard(item)));
   }
@@ -208,27 +231,20 @@ function renderSearchResults() {
 }
 
 function renderInspirationMode() {
-  const allItems = [...DATA.penginapan, ...DATA.workspace, ...DATA.wisata, ...DATA.kuliner];
-  const catColors = { penginapan:'#1d4ed8', workspace:'#065f46', wisata:'#9d174d', kuliner:'#92400e' };
-  const catLabels = { penginapan:'🏨 Penginapan', workspace:'☕ Workspace', wisata:'🏖️ Wisata', kuliner:'🍽️ Kuliner' };
-  // Varied heights for masonry effect
-  const heights = [220, 280, 200, 260, 240, 300, 210, 270, 190, 250, 230, 280,
-                   200, 260, 220, 290, 210, 240, 270, 200, 250, 230, 280, 260];
+  const allItems = [...(API_DATA.penginapan||[]), ...(API_DATA.workspace||[]), ...(API_DATA.wisata||[]), ...(API_DATA.kuliner||[])];
+  const heights = [220, 280, 200, 260, 240, 300];
   const sec = el('div', 'container', '');
   sec.style.cssText = 'padding-top:2rem;padding-bottom:4rem';
   sec.innerHTML = `
     <div style="text-align:center;margin-bottom:2rem">
       <h2 class="section-title">🌟 Inspirasi Workation</h2>
-      <p class="section-sub">Temukan tempat impianmu melalui galeri foto indah</p>
     </div>
     <div class="masonry">
       ${allItems.map((item, i) => `
         <div class="masonry-item" style="height:${heights[i % heights.length]}px" onclick="openDetail('${item.id}','${item.category}')">
           <div style="width:100%;height:100%;background:url('${item.img}') center/cover no-repeat;"></div>
           <div class="masonry-overlay">
-            <span style="display:inline-block;background:${catColors[item.category]};color:#fff;font-size:0.65rem;font-weight:700;padding:2px 8px;border-radius:100px;margin-bottom:4px">${catLabels[item.category]}</span>
-            <div style="color:#fff;font-weight:700;font-size:0.9rem;text-shadow:0 1px 4px rgba(0,0,0,0.6)">${item.name}</div>
-            <button class="btn btn-primary btn-sm mt-1" onclick="event.stopPropagation();openDetail('${item.id}','${item.category}')">Explore →</button>
+            <div style="color:#fff;font-weight:700;font-size:0.9rem">${item.name}</div>
           </div>
         </div>
       `).join('')}
@@ -238,84 +254,50 @@ function renderInspirationMode() {
 }
 
 function getFilteredItems() {
-  let items = DATA[searchState.category] || [];
-
+  let items = (API_DATA && API_DATA[searchState.category]) || [];
+  
   // Text search
   if (searchState.query) {
     const q = searchState.query.toLowerCase();
     items = items.filter(i => i.name.toLowerCase().includes(q) || (i.desc||'').toLowerCase().includes(q));
   }
 
+  const filteredItems = items; // Temporary variable to log
+  console.log("FILTERED (" + searchState.category + "):", filteredItems);
+
   // Budget filter (wisata gratis selalu lolos)
-  items = items.filter(i => i.price === 0 || (i.price >= searchState.budget[0] && i.price <= searchState.budget[1]));
-
-  // WiFi filter
   if (+searchState.wifi > 0) items = items.filter(i => i.wifi >= +searchState.wifi);
-
-  // Rating filter
   if (searchState.rating > 0) items = items.filter(i => i.rating >= searchState.rating);
-
-  // Suasana filter — partial match (lowercase, any token)
   if (searchState.suasana.length > 0) {
-    items = items.filter(i =>
-      searchState.suasana.some(sel =>
-        (i.suasana || []).some(s => s.toLowerCase().includes(sel.toLowerCase()))
-      )
-    );
+    items = items.filter(i => searchState.suasana.some(sel => (i.suasana || []).some(s => s.toLowerCase().includes(sel.toLowerCase()))));
   }
-
-  // Fasilitas filter — ALL must be present
   if (searchState.facilities.length > 0) {
-    items = items.filter(i =>
-      searchState.facilities.every(f => (i.facilities || []).includes(f))
-    );
+    items = items.filter(i => searchState.facilities.every(f => (i.facilities || []).includes(f)));
   }
-
-  // Sort
-  if (searchState.sortBy === 'price_asc') {
-    items = [...items].sort((a, b) => a.price - b.price);
-  } else if (searchState.sortBy === 'price_desc') {
-    items = [...items].sort((a, b) => b.price - a.price);
-  } else {
-    items = [...items].sort((a, b) => b.rating - a.rating);
-  }
-
+  if (searchState.sortBy === 'price_asc') items = [...items].sort((a, b) => a.price - b.price);
+  else if (searchState.sortBy === 'price_desc') items = [...items].sort((a, b) => b.price - a.price);
+  else items = [...items].sort((a, b) => b.rating - a.rating);
   return items;
 }
 
 function initMap() {
   const mapEl = document.getElementById('map');
-  if (!mapEl || !window.L) return;
+  if (!mapEl || !window.L || !API_DATA) return;
   if (mapInstance) { mapInstance.remove(); mapInstance = null; }
   mapInstance = L.map('map').setView([-8.15, 110.61], 12);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '© OpenStreetMap contributors'
-  }).addTo(mapInstance);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap contributors' }).addTo(mapInstance);
 
-  const colorMap = { penginapan:'#1d4ed8', workspace:'#065f46', wisata:'#9d174d', kuliner:'#92400e' };
-  const allItems = [...DATA.penginapan, ...DATA.workspace, ...DATA.wisata, ...DATA.kuliner];
+  const allItems = [...(API_DATA.penginapan||[]), ...(API_DATA.workspace||[]), ...(API_DATA.wisata||[]), ...(API_DATA.kuliner||[])];
   allItems.forEach(item => {
-    const color = colorMap[item.category] || '#333';
     const icon = L.divIcon({
-      html: `<div style="background:${color};color:#fff;border-radius:50%;width:32px;height:32px;display:flex;align-items:center;justify-content:center;font-size:14px;border:2px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,0.3)">
-        ${{penginapan:'🏨',workspace:'☕',wisata:'🏖️',kuliner:'🍽️'}[item.category]}
-      </div>`,
+      html: `<div style="background:#1a4a3a;color:#fff;border-radius:50%;width:32px;height:32px;display:flex;align-items:center;justify-content:center;border:2px solid #fff">📍</div>`,
       iconSize: [32, 32], iconAnchor: [16, 16], className: ''
     });
-    const priceStr = item.price === 0 ? 'Gratis' : formatRupiah(item.price);
     const marker = L.marker([item.lat, item.lng], { icon }).addTo(mapInstance);
-    marker.bindPopup(`
-      <div style="min-width:180px;font-family:'Inter',sans-serif">
-        <img src="${item.img}" style="width:100%;height:90px;object-fit:cover;border-radius:6px;margin-bottom:8px" />
-        <strong style="font-size:0.875rem">${item.name}</strong><br/>
-        <span style="color:#F5A623">⭐ ${item.rating}</span>
-        <span style="float:right;font-weight:700;color:#1a4a3a">${priceStr}</span>
-      </div>
-    `);
+    marker.bindPopup(`<strong>${item.name}</strong><br/>⭐ ${item.rating}`);
   });
 }
 
-// Event handlers
 function handleSearch(val) { searchState.query = val; }
 function applySearch() { renderApp(); }
 function setCategory(cat) { searchState.category = cat; renderApp(); }
@@ -323,19 +305,8 @@ function toggleMap() { searchState.showMap = !searchState.showMap; renderApp(); 
 function toggleInspiration() { searchState.inspirationMode = !searchState.inspirationMode; renderApp(); }
 function updateBudget(type, val) {
   const v = +val;
-  if (type === 'min') {
-    // Jangan biarkan min > max
-    searchState.budget[0] = Math.min(v, searchState.budget[1]);
-  } else {
-    // Jangan biarkan max < min
-    searchState.budget[1] = Math.max(v, searchState.budget[0]);
-  }
-  // Update slider value in DOM without full re-render for better UX
-  const minEl = document.getElementById('budget-min');
-  const maxEl = document.getElementById('budget-max');
-  if (minEl) minEl.value = searchState.budget[0];
-  if (maxEl) maxEl.value = searchState.budget[1];
-  // Update displayed range label
+  if (type === 'min') searchState.budget[0] = Math.min(v, searchState.budget[1]);
+  else searchState.budget[1] = Math.max(v, searchState.budget[0]);
   const lbl = document.getElementById('budget-label');
   if (lbl) lbl.textContent = `${formatRupiah(searchState.budget[0])} – ${formatRupiah(searchState.budget[1])}`;
 }
@@ -355,7 +326,4 @@ function resetFilters() {
   searchState = { ...searchState, budget:[100000,1500000], wifi:0, suasana:[], rating:0, facilities:[] };
   renderApp();
 }
-function sortResults(by) {
-  searchState.sortBy = by;
-  renderApp();
-}
+function sortResults(by) { searchState.sortBy = by; renderApp(); }

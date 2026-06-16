@@ -18,22 +18,28 @@ function renderApp() {
   app.appendChild(renderNavbar());
 
   // Page
-  let pageEl;
+  let pageResult = null;
   switch (State.currentPage) {
-    case 'search':      pageEl = renderSearchPage(); break;
-    case 'package':     pageEl = renderPackagePage(); break;
-    case 'booking':     pageEl = renderBookingPage(); break;
-    case 'productivity': pageEl = renderProductivityPage(); break;
-    case 'review':      pageEl = renderReviewPage(); break;
-    default:            pageEl = renderSearchPage();
+    case 'search':      pageResult = renderSearchPage(); break;
+    case 'package':     pageResult = renderPackagePage(); break;
+    case 'booking':     pageResult = renderBookingPage(); break;
+    case 'productivity': pageResult = renderProductivityPage(); break;
+    case 'review':      pageResult = renderReviewPage(); break;
+    default:            pageResult = renderSearchPage();
   }
-  app.appendChild(pageEl);
 
-  // Footer
-  app.appendChild(renderFooter());
-
-  // Bottom navigation bar (mobile only, injected directly into body)
-  renderBottomNav();
+  // Handle both sync and async render results
+  if (pageResult instanceof Promise) {
+    pageResult.then(pageEl => {
+      app.appendChild(pageEl);
+      app.appendChild(renderFooter());
+      renderBottomNav();
+    });
+  } else {
+    app.appendChild(pageResult);
+    app.appendChild(renderFooter());
+    renderBottomNav();
+  }
 }
 
 function renderFooter() {
