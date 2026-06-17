@@ -16,41 +16,29 @@ async function renderSearchPage() {
 
   // Fetch data if not already fetched
   if (!API_DATA) {
-    page.innerHTML = `<div style="text-align:center;padding:5rem;color:var(--gray-400)">
-      <div class="loader mb-3"></div>
-      <p>Mengambil data lokasi dari Gunung Kidul...</p>
-    </div>`;
+    page.innerHTML = `
+      <div style="max-width:1280px; margin:0 auto; padding:5rem 1.5rem;">
+        <div style="margin-bottom:2rem;">
+          <div style="height:40px; width:200px; background:var(--gray-200); border-radius:8px; margin-bottom:1rem; animation:pulse 1.5s infinite;"></div>
+          <div style="height:20px; width:300px; background:var(--gray-200); border-radius:4px; animation:pulse 1.5s infinite;"></div>
+        </div>
+        <div class="grid-3">
+          ${Array(6).fill().map(() => `
+            <div class="card" style="border:1px solid var(--gray-100); box-shadow:none;">
+              <div style="height:200px; background:var(--gray-200); animation:pulse 1.5s infinite;"></div>
+              <div class="card-body">
+                <div style="height:20px; width:60%; background:var(--gray-200); border-radius:4px; margin-bottom:1rem; animation:pulse 1.5s infinite;"></div>
+                <div style="height:15px; width:40%; background:var(--gray-200); border-radius:4px; margin-bottom:1.5rem; animation:pulse 1.5s infinite;"></div>
+                <div style="height:36px; width:100%; background:var(--gray-200); border-radius:8px; animation:pulse 1.5s infinite;"></div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+        <style>@keyframes pulse { 0% { opacity: 0.6; } 50% { opacity: 0.3; } 100% { opacity: 0.6; } }</style>
+      </div>`;
     
     try {
-      const response = await fetch('http://localhost:3001/api/locations');
-      if (!response.ok) throw new Error('Gagal mengambil data');
-      const rawData = await response.json();
-      
-      // Transform API data to match existing DATA structure
-      API_DATA = {
-        penginapan: rawData.filter(i => i.category.toLowerCase().includes('beach') || i.category.toLowerCase().includes('hill') || i.category.toLowerCase().includes('penginapan')),
-        workspace: rawData.filter(i => i.category.toLowerCase().includes('cafe') || i.category.toLowerCase().includes('workspace')),
-        wisata: rawData.filter(i => i.category.toLowerCase().includes('wisata')),
-        kuliner: rawData.filter(i => i.category.toLowerCase().includes('kuliner'))
-      };
-      
-      // Map API fields to frontend fields
-      Object.keys(API_DATA).forEach(cat => {
-        API_DATA[cat] = API_DATA[cat].map(item => ({
-          ...item,
-          id: item.id.toString(),
-          category: cat, 
-          img: item.img || `https://picsum.photos/seed/${item.id}/800/600`,
-          price: parseFloat(item.packages?.[0]?.pricePerDay || 0),
-          unit: 'hari',
-          reviews: Math.floor(Math.random() * 50) + 10,
-          rating: (3.5 + Math.random() * 1.5).toFixed(1),
-          wifi: item.wifiSpeed,
-          facilities: item.hasPowerOutlet ? ['Colokan'] : [],
-          suasana: [item.category],
-          desc: item.description
-        }));
-      });
+      API_DATA = await LocationService.getLocations();
 
       setTimeout(renderApp, 0);
       return page;
@@ -61,9 +49,14 @@ async function renderSearchPage() {
         setTimeout(renderApp, 0);
         return page;
       }
-      page.innerHTML = `<div style="text-align:center;padding:5rem;color:var(--gray-400)">
-        <p>Gagal terhubung ke server. Pastikan backend berjalan di localhost:3001</p>
-        <button class="btn btn-primary mt-3" onclick="renderApp()">Coba Lagi</button>
+      page.innerHTML = `<div style="text-align:center;padding:8rem 1rem;color:var(--gray-500);max-width:500px;margin:0 auto;">
+        <svg style="width:64px;height:64px;margin-bottom:1.5rem;color:var(--gray-300);display:inline-block;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+        <h3 style="font-family:'Playfair Display',serif;font-size:1.5rem;color:var(--gray-800);margin-bottom:0.5rem;">Gagal memuat data destinasi.</h3>
+        <p style="margin-bottom:2rem;line-height:1.6;">Periksa koneksi atau coba beberapa saat lagi.</p>
+        <button class="btn btn-primary" onclick="renderApp()">
+          <svg style="width:16px;height:16px;margin-right:0.5rem;display:inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+          Coba Lagi
+        </button>
       </div>`;
       return page;
     }
