@@ -1,0 +1,6 @@
+-- AlterTable
+ALTER TABLE `locations` ADD COLUMN `facilities` JSON NULL,
+    ADD COLUMN `img` VARCHAR(255) NULL,
+    ADD COLUMN `rating` DECIMAL(3, 1) NOT NULL DEFAULT 0.0,
+    ADD COLUMN `reviews` INTEGER NOT NULL DEFAULT 0,
+    ADD COLUMN `suasana` JSON NULL;

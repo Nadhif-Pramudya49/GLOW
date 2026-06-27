@@ -37,10 +37,10 @@ const DATA = {
 
 
 const TRANSPORT_OPTIONS = [
-  { id:'motor', name:'Sewa Motor', price:75000, icon:'🛵' },
-  { id:'mobil', name:'Sewa Mobil', price:350000, icon:'🚗' },
-  { id:'ojek', name:'Ojek Online', price:0, icon:'🏍️', note:'Per perjalanan' },
-  { id:'none', name:'Tidak Perlu', price:0, icon:'🚶' },
+  { id:'motor', name:'Sewa Motor', price:75000, img:'https://images.unsplash.com/photo-1558981403-c5f9899a28bc?w=800&q=80' },
+  { id:'mobil', name:'Sewa Mobil', price:350000, img:'https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?w=800&q=80' },
+  { id:'ojek', name:'Ojek Online', price:0, img:'https://images.unsplash.com/photo-1558980394-4c7c9299fe96?w=800&q=80', note:'Per perjalanan' },
+  { id:'none', name:'Tidak Perlu', price:0, img:'https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=800&q=80' },
 ];
 
 const DUMMY_REVIEWS = [

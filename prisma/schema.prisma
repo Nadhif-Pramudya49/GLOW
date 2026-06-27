@@ -31,6 +31,11 @@ model Location {
   wifiSpeed       Int       // Mbps
   hasPowerOutlet  Boolean   @default(true)
   description     String    @db.Text
+  img             String?   @db.VarChar(255)
+  rating          Decimal   @default(0.0) @db.Decimal(3, 1)
+  reviews         Int       @default(0)
+  facilities      Json?
+  suasana         Json?
   packages        Package[]
 
   @@map("locations")

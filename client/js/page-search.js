@@ -3,16 +3,17 @@
 let mapInstance = null;
 let API_DATA = null; // Store for fetched API data
 let searchState = {
-  query: '', category: 'penginapan',
+  query: '', category: 'semua',
   budget: [100000, 1500000], wifi: 0,
   suasana: [], rating: 0,
   facilities: [], showMap: false,
   inspirationMode: false,
   sortBy: 'rating',   // 'rating' | 'price_asc' | 'price_desc'
+  openFilter: null,
 };
 
 async function renderSearchPage() {
-  const page = el('div', 'page fade-in');
+  const page = el('div', 'page');
 
   // Fetch data if not already fetched
   if (!API_DATA) {
@@ -64,9 +65,9 @@ async function renderSearchPage() {
 
   // Hero slides data
   const heroSlides = [
-    { img: 'assets/images/hero-beach.png',   label: '📍 Pantai Indrayanti, Gunung Kidul' },
-    { img: 'assets/images/hero-culture.png', label: '☕ Workation Cafe Khas Jogja' },
-    { img: 'assets/images/hero-aerial.png',  label: '🏔️ Perbukitan Karst Gunung Kidul' },
+    { img: 'assets/images/hero-beach.png',   label: 'Pantai Indrayanti, Gunung Kidul' },
+    { img: 'assets/images/hero-culture.png', label: 'Workation Cafe Khas Jogja' },
+    { img: 'assets/images/hero-aerial.png',  label: 'Perbukitan Karst Gunung Kidul' },
   ];
 
   // Hero
@@ -84,18 +85,14 @@ async function renderSearchPage() {
       ${heroSlides.map((_, i) => `<button class="hero-dot ${i===0?'active':''}" onclick="goToSlide(${i})" aria-label="Slide ${i+1}"></button>`).join('')}
     </div>
     <div class="hero-content">
-      <div style="display:inline-flex;align-items:center;gap:8px;background:rgba(245,166,35,0.2);border:1px solid rgba(245,166,35,0.4);border-radius:100px;padding:6px 16px;margin-bottom:1.5rem;font-size:0.875rem;color:var(--gold)">
-        ✨ Workation Platform #1 di Gunung Kidul
-      </div>
       <h1 class="hero-title">Temukan <span>workation spot</span><br/>sempurna di Gunung Kidul </h1>
-      <p class="hero-sub">Cari hotel, cafe, wisata, kuliner semua dalam satu platform terintegrasi</p>
+      <p class="hero-sub">Cari hotel, cafe, wisata, kuliner semua dalam satu<br/>platform terintegrasi untuk produktivitas maksimal.</p>
       <div class="search-bar">
-        <span style="font-size:1.25rem">🔍</span>
-        <input type="text" id="hero-search" placeholder="Cari tempat, cafe, wisata..." value="${searchState.query}" oninput="handleSearch(this.value)" />
+        <input type="text" id="hero-search" placeholder="Cari tempat, cafe, wisata, kuliner..." value="${searchState.query}" oninput="handleSearch(this.value)" />
         <button class="btn btn-primary" onclick="applySearch()">Cari Sekarang</button>
       </div>
-      <div class="tabs mt-4" style="justify-content:center">
-        ${[['penginapan','🏨 Penginapan'],['workspace','☕ Workspace/Cafe'],['wisata','🏖️ Wisata'],['kuliner','🍽️ Kuliner']].map(([id,label])=>`
+      <div class="tabs mt-2" style="justify-content:flex-start">
+        ${[['semua','Semua'],['penginapan','Penginapan'],['workspace','Workspace / Cafe'],['wisata','Wisata'],['kuliner','Kuliner']].map(([id,label])=>`
           <button class="tab-btn ${searchState.category===id?'active':''}" onclick="setCategory('${id}')">${label}</button>
         `).join('')}
       </div>
@@ -105,96 +102,148 @@ async function renderSearchPage() {
 
   setTimeout(initHeroSlideshow, 50);
 
-  const inspBar = el('div', 'container', '');
-  inspBar.style.cssText = 'padding-top:1.5rem;display:flex;justify-content:flex-end;gap:1rem';
-  inspBar.innerHTML = `
-    <button class="btn btn-ghost" onclick="toggleInspiration()" id="insp-btn">
-      ${searchState.inspirationMode ? '🎨 Keluar Inspiration Mode' : '🌟 Inspiration Mode'}
-    </button>
-    <button class="btn btn-ghost" onclick="toggleMap()" id="map-btn">
-      ${searchState.showMap ? '🗺️ Sembunyikan Peta' : '🗺️ Tampilkan Peta'}
-    </button>
-  `;
-  page.appendChild(inspBar);
-
-  if (searchState.inspirationMode) {
-    page.appendChild(renderInspirationMode());
-    return page;
+  if (searchState.category === 'semua') {
+    const kat = renderKategoriPopuler();
+    kat.classList.add('fade-in');
+    page.appendChild(kat);
   }
 
-  if (searchState.showMap) {
-    const mapSec = el('div', 'container mt-4');
-    mapSec.innerHTML = `<div class="map-container"><div id="map"></div></div>`;
-    page.appendChild(mapSec);
-  }
+  page.appendChild(renderHorizontalFilter());
 
-  const main = el('div', 'container', '');
-  main.style.cssText = 'padding-top:2rem;padding-bottom:4rem';
-  const layout = el('div', 'sidebar-layout');
-  layout.appendChild(renderFilterSidebar());
-  const results = el('div', '');
-  results.appendChild(renderSearchResults());
-  layout.appendChild(results);
-  main.appendChild(layout);
+  const main = el('div', 'container fade-in', '');
+  main.style.cssText = 'padding-top:2rem;padding-bottom:4rem;position:relative';
+  
+  main.appendChild(renderSearchResults());
   page.appendChild(main);
 
-  if (searchState.showMap) {
-    setTimeout(initMap, 100);
-  }
+  // Inspiration Mode - Always shown
+  page.appendChild(renderInspirationMode());
+
+  // Map - Always shown
+  const mapSec = el('div', 'container mb-4');
+  mapSec.style.marginTop = '2rem';
+  mapSec.innerHTML = `<div class="map-container"><div id="map"></div></div>`;
+  page.appendChild(mapSec);
+  setTimeout(initMap, 100);
 
   return page;
 }
 
-function renderFilterSidebar() {
-  const sidebar = el('div', 'filter-sidebar');
-  sidebar.innerHTML = `
-    <div class="filter-title">🎛️ Filter Pencarian</div>
-    <div class="filter-section">
-      <div class="filter-section-label">Budget (per malam/hari)</div>
-      <div id="budget-label" style="font-size:0.875rem;font-weight:600;color:var(--green);margin-bottom:8px">
-        ${formatRupiah(searchState.budget[0])} – ${formatRupiah(searchState.budget[1])}
-      </div>
-      <input type="range" class="range-slider" id="budget-min" min="100000" max="1500000" step="50000"
-        value="${searchState.budget[0]}" oninput="updateBudget('min',this.value)" />
-      <input type="range" class="range-slider" id="budget-max" min="100000" max="1500000" step="50000"
-        value="${searchState.budget[1]}" oninput="updateBudget('max',this.value)" />
+function toggleFilter(filterName, event) {
+  if (event) event.stopPropagation();
+  if (searchState.openFilter === filterName) {
+    searchState.openFilter = null;
+  } else {
+    searchState.openFilter = filterName;
+  }
+  renderApp();
+}
+
+// Global click handler to close dropdowns
+document.addEventListener('click', (e) => {
+  if (searchState.openFilter && !e.target.closest('.filter-item')) {
+    searchState.openFilter = null;
+    renderApp();
+  }
+});
+
+function renderHorizontalFilter() {
+  const wrapper = el('div', 'filter-wrapper');
+  const bar = el('div', 'filter-bar container');
+  
+  const formatBdgt = searchState.budget[0] > 100000 || searchState.budget[1] < 1500000 ? 'Harga: Ditentukan' : 'Harga';
+  const formatWifi = searchState.wifi > 0 ? `WiFi: >${searchState.wifi}Mbps` : 'Kecepatan WiFi';
+  const formatSuasana = searchState.suasana.length ? `Suasana (${searchState.suasana.length})` : 'Suasana';
+  const formatRating = searchState.rating > 0 ? `Rating: ${searchState.rating}+` : 'Rating Minimum';
+  const formatFac = searchState.facilities.length ? `Fasilitas (${searchState.facilities.length})` : 'Fasilitas';
+
+  bar.innerHTML = `
+    <div class="filter-item">
+      <button class="filter-pill ${searchState.openFilter==='budget'?'active':''} ${formatBdgt!=='Harga'?'has-value':''}" onclick="toggleFilter('budget', event)">
+        ${formatBdgt} ▼
+      </button>
+      ${searchState.openFilter === 'budget' ? `
+        <div class="filter-dropdown">
+          <div class="filter-dropdown-title">Rentang Harga (per malam/hari)</div>
+          <div id="budget-label" style="font-size:0.875rem;font-weight:600;color:var(--green);margin-bottom:1rem">
+            ${formatRupiah(searchState.budget[0])} – ${formatRupiah(searchState.budget[1])}
+          </div>
+          <input type="range" class="range-slider" id="budget-min" min="100000" max="1500000" step="50000" value="${searchState.budget[0]}" oninput="updateBudget('min',this.value)" />
+          <input type="range" class="range-slider" id="budget-max" min="100000" max="1500000" step="50000" value="${searchState.budget[1]}" oninput="updateBudget('max',this.value)" />
+        </div>
+      ` : ''}
     </div>
-    <div class="filter-section">
-      <div class="filter-section-label">Kecepatan WiFi</div>
-      ${[['0','Tidak perlu'],['10','> 10 Mbps'],['50','> 50 Mbps'],['100','> 100 Mbps']].map(([v,l])=>`
-        <label style="display:flex;align-items:center;gap:8px;margin-bottom:6px;cursor:pointer;font-size:0.875rem">
-          <input type="radio" name="wifi" value="${v}" ${searchState.wifi==v?'checked':''} onchange="searchState.wifi=${v};renderApp()" style="accent-color:var(--green)" />
-          ${l}
-        </label>
-      `).join('')}
+
+    <div class="filter-item">
+      <button class="filter-pill ${searchState.openFilter==='wifi'?'active':''} ${searchState.wifi>0?'has-value':''}" onclick="toggleFilter('wifi', event)">
+        ${formatWifi} ▼
+      </button>
+      ${searchState.openFilter === 'wifi' ? `
+        <div class="filter-dropdown">
+          <div class="filter-dropdown-title">Kecepatan WiFi</div>
+          ${[['0','Tidak perlu'],['10','> 10 Mbps'],['50','> 50 Mbps'],['100','> 100 Mbps']].map(([v,l])=>`
+            <label style="display:flex;align-items:center;gap:8px;margin-bottom:10px;cursor:pointer;font-size:0.875rem">
+              <input type="radio" name="wifi" value="${v}" ${searchState.wifi==v?'checked':''} onchange="searchState.wifi=${v};renderApp()" style="accent-color:var(--green)" />
+              ${l}
+            </label>
+          `).join('')}
+        </div>
+      ` : ''}
     </div>
-    <div class="filter-section">
-      <div class="filter-section-label">Suasana</div>
-      <div class="flex flex-wrap gap-2">
-        ${['Tenang','Outdoor','Pantai','Petualangan','Pemandangan laut','Sunrise','Seafood','Tradisional'].map(s=>`
-          <span class="chip ${searchState.suasana.includes(s)?'active':''}" onclick="toggleSuasana('${s}')">${s}</span>
-        `).join('')}
-      </div>
+
+    <div class="filter-item">
+      <button class="filter-pill ${searchState.openFilter==='suasana'?'active':''} ${searchState.suasana.length?'has-value':''}" onclick="toggleFilter('suasana', event)">
+        ${formatSuasana} ▼
+      </button>
+      ${searchState.openFilter === 'suasana' ? `
+        <div class="filter-dropdown">
+          <div class="filter-dropdown-title">Suasana</div>
+          <div class="flex flex-wrap gap-2">
+            ${['Tenang','Outdoor','Pantai','Petualangan','Pemandangan laut','Sunrise','Seafood','Tradisional'].map(s=>`
+              <span class="chip ${searchState.suasana.includes(s)?'active':''}" onclick="toggleSuasana('${s}')">${s}</span>
+            `).join('')}
+          </div>
+        </div>
+      ` : ''}
     </div>
-    <div class="filter-section">
-      <div class="filter-section-label">Rating Minimum</div>
-      <div class="star-input" id="rating-filter">
-        ${[1,2,3,4,5].map(n=>`<span class="${n<=searchState.rating?'active':''}" onclick="setRatingFilter(${n})">★</span>`).join('')}
-      </div>
+
+    <div class="filter-item">
+      <button class="filter-pill ${searchState.openFilter==='rating'?'active':''} ${searchState.rating>0?'has-value':''}" onclick="toggleFilter('rating', event)">
+        ${formatRating} ▼
+      </button>
+      ${searchState.openFilter === 'rating' ? `
+        <div class="filter-dropdown">
+          <div class="filter-dropdown-title">Rating Minimum</div>
+          <div class="star-input" id="rating-filter">
+            ${[1,2,3,4,5].map(n=>`<span class="${n<=searchState.rating?'active':''}" onclick="setRatingFilter(${n})">★</span>`).join('')}
+          </div>
+        </div>
+      ` : ''}
     </div>
-    <div class="filter-section">
-      <div class="filter-section-label">Fasilitas</div>
-      ${['Colokan','AC','Kolam Renang','Parkir','Spa','Guide'].map(f=>`
-        <label style="display:flex;align-items:center;gap:8px;margin-bottom:6px;cursor:pointer;font-size:0.875rem">
-          <input type="checkbox" ${searchState.facilities.includes(f)?'checked':''} onchange="toggleFacility('${f}')" style="accent-color:var(--green)" />
-          ${getFacilityIcon(f)} ${f}
-        </label>
-      `).join('')}
+
+    <div class="filter-item">
+      <button class="filter-pill ${searchState.openFilter==='fac'?'active':''} ${searchState.facilities.length?'has-value':''}" onclick="toggleFilter('fac', event)">
+        ${formatFac} ▼
+      </button>
+      ${searchState.openFilter === 'fac' ? `
+        <div class="filter-dropdown">
+          <div class="filter-dropdown-title">Fasilitas</div>
+          ${['Colokan','AC','Kolam Renang','Parkir','Spa','Guide'].map(f=>`
+            <label style="display:flex;align-items:center;gap:8px;margin-bottom:10px;cursor:pointer;font-size:0.875rem">
+              <input type="checkbox" ${searchState.facilities.includes(f)?'checked':''} onchange="toggleFacility('${f}')" style="accent-color:var(--green)" />
+              ${getFacilityIcon(f)} ${f}
+            </label>
+          `).join('')}
+        </div>
+      ` : ''}
     </div>
-    <button class="btn btn-secondary btn-full" onclick="applyFilters()">✅ Terapkan Filter</button>
-    <button class="btn btn-ghost btn-full mt-2" onclick="resetFilters()">↺ Reset</button>
+
+    <div style="margin-left:auto">
+      <button class="btn btn-ghost" onclick="resetFilters()" style="padding:0.5rem 1rem">Bersihkan Filter</button>
+    </div>
   `;
-  return sidebar;
+  wrapper.appendChild(bar);
+  return wrapper;
 }
 
 function renderSearchResults() {
@@ -204,7 +253,7 @@ function renderSearchResults() {
   header.innerHTML = `
     <div>
       <span style="font-weight:700;color:var(--gray-700)">${items.length} tempat ditemukan</span>
-      <span style="font-size:0.875rem;color:var(--gray-400);margin-left:8px">• ${searchState.category === 'penginapan' ? '🏨 Penginapan' : searchState.category === 'workspace' ? '☕ Workspace' : searchState.category === 'wisata' ? '🏖️ Wisata' : '🍽️ Kuliner'}</span>
+      <span style="font-size:0.875rem;color:var(--gray-400);margin-left:8px">• ${searchState.category === 'penginapan' ? 'Penginapan' : searchState.category === 'workspace' ? 'Workspace' : searchState.category === 'wisata' ? 'Wisata' : 'Kuliner'}</span>
     </div>
     <select class="form-input" style="width:auto;padding:6px 12px" onchange="sortResults(this.value)">
       <option value="rating"   ${searchState.sortBy==='rating'   ?'selected':''}>Urutkan: Rating Terbaik</option>
@@ -213,7 +262,7 @@ function renderSearchResults() {
     </select>
   `;
   wrap.appendChild(header);
-  const grid = el('div', 'grid-3');
+  const grid = el('div', 'grid-4');
   if (items.length === 0) {
     grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:3rem;color:var(--gray-400)"><p>Tidak ada hasil ditemukan.</p></div>`;
   } else {
@@ -230,7 +279,7 @@ function renderInspirationMode() {
   sec.style.cssText = 'padding-top:2rem;padding-bottom:4rem';
   sec.innerHTML = `
     <div style="text-align:center;margin-bottom:2rem">
-      <h2 class="section-title">🌟 Inspirasi Workation</h2>
+      <h2 class="section-title">Inspirasi Workation</h2>
     </div>
     <div class="masonry">
       ${allItems.map((item, i) => `
@@ -246,8 +295,69 @@ function renderInspirationMode() {
   return sec;
 }
 
+function renderKategoriPopuler() {
+  const sec = el('div', 'container', '');
+  sec.style.cssText = 'padding-top:1rem;padding-bottom:4rem';
+  sec.innerHTML = `
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2rem">
+      <h2 style="font-family:'Playfair Display', serif; font-size:2rem; color:var(--gray-800); margin:0;">Kategori Populer</h2>
+      <a href="#" style="color:var(--gray-600); text-decoration:none; font-size:0.95rem; display:inline-flex; align-items:center; gap:0.5rem; font-weight:500;">
+        Lihat Semua <svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
+      </a>
+    </div>
+    <div class="grid-4" style="gap:1.5rem">
+      <!-- Card 1 -->
+      <div style="position:relative; border-radius:12px; overflow:hidden; height:280px; cursor:pointer; background:#000;" onclick="setCategory('penginapan')">
+        <div style="position:absolute; inset:0; background:url('assets/images/hero-beach.png') center/cover; opacity:0.8; transition:transform 0.5s ease" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'"></div>
+        <div style="position:absolute; inset:0; background:linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.8) 100%);"></div>
+        <div style="position:absolute; inset:0; padding:1.5rem; display:flex; flex-direction:column; justify-content:flex-end; color:#fff">
+          <h3 style="font-family:'Playfair Display', serif; font-size:1.5rem; margin-bottom:0.5rem">Penginapan</h3>
+          <p style="font-size:0.85rem; opacity:0.9; margin-bottom:1.5rem">Temukan akomodasi nyaman untuk workation Anda</p>
+          <div><button class="btn" style="background:#fff; color:#173F35; font-weight:600; padding:0.4rem 1.25rem; font-size:0.875rem; border-radius:6px; border:none;">Jelajahi</button></div>
+        </div>
+      </div>
+      <!-- Card 2 -->
+      <div style="position:relative; border-radius:12px; overflow:hidden; height:280px; cursor:pointer; background:#000;" onclick="setCategory('workspace')">
+        <div style="position:absolute; inset:0; background:url('assets/images/hero-culture.png') center/cover; opacity:0.8; transition:transform 0.5s ease" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'"></div>
+        <div style="position:absolute; inset:0; background:linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.8) 100%);"></div>
+        <div style="position:absolute; inset:0; padding:1.5rem; display:flex; flex-direction:column; justify-content:flex-end; color:#fff">
+          <h3 style="font-family:'Playfair Display', serif; font-size:1.5rem; margin-bottom:0.5rem">Workspace / Cafe</h3>
+          <p style="font-size:0.85rem; opacity:0.9; margin-bottom:1.5rem">Tempat kerja produktif dengan suasana inspiratif</p>
+          <div><button class="btn" style="background:#fff; color:#173F35; font-weight:600; padding:0.4rem 1.25rem; font-size:0.875rem; border-radius:6px; border:none;">Jelajahi</button></div>
+        </div>
+      </div>
+      <!-- Card 3 -->
+      <div style="position:relative; border-radius:12px; overflow:hidden; height:280px; cursor:pointer; background:#000;" onclick="setCategory('wisata')">
+        <div style="position:absolute; inset:0; background:url('assets/images/hero-aerial.png') center/cover; opacity:0.8; transition:transform 0.5s ease" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'"></div>
+        <div style="position:absolute; inset:0; background:linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.8) 100%);"></div>
+        <div style="position:absolute; inset:0; padding:1.5rem; display:flex; flex-direction:column; justify-content:flex-end; color:#fff">
+          <h3 style="font-family:'Playfair Display', serif; font-size:1.5rem; margin-bottom:0.5rem">Wisata</h3>
+          <p style="font-size:0.85rem; opacity:0.9; margin-bottom:1.5rem">Jelajahi keindahan alam Gunung Kidul</p>
+          <div><button class="btn" style="background:#fff; color:#173F35; font-weight:600; padding:0.4rem 1.25rem; font-size:0.875rem; border-radius:6px; border:none;">Jelajahi</button></div>
+        </div>
+      </div>
+      <!-- Card 4 -->
+      <div style="position:relative; border-radius:12px; overflow:hidden; height:280px; cursor:pointer; background:#000;" onclick="setCategory('kuliner')">
+        <div style="position:absolute; inset:0; background:url('assets/images/hero-culture.png') center/cover; opacity:0.8; transition:transform 0.5s ease" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'"></div>
+        <div style="position:absolute; inset:0; background:linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.8) 100%);"></div>
+        <div style="position:absolute; inset:0; padding:1.5rem; display:flex; flex-direction:column; justify-content:flex-end; color:#fff">
+          <h3 style="font-family:'Playfair Display', serif; font-size:1.5rem; margin-bottom:0.5rem">Kuliner</h3>
+          <p style="font-size:0.85rem; opacity:0.9; margin-bottom:1.5rem">Nikmati cita rasa khas Gunung Kidul</p>
+          <div><button class="btn" style="background:#fff; color:#173F35; font-weight:600; padding:0.4rem 1.25rem; font-size:0.875rem; border-radius:6px; border:none;">Jelajahi</button></div>
+        </div>
+      </div>
+    </div>
+  `;
+  return sec;
+}
+
 function getFilteredItems() {
-  let items = (API_DATA && API_DATA[searchState.category]) || [];
+  let items = [];
+  if (searchState.category === 'semua' && API_DATA) {
+    items = [...(API_DATA.penginapan||[]), ...(API_DATA.workspace||[]), ...(API_DATA.wisata||[]), ...(API_DATA.kuliner||[])];
+  } else {
+    items = (API_DATA && API_DATA[searchState.category]) || [];
+  }
   
   // Text search
   if (searchState.query) {
@@ -259,6 +369,16 @@ function getFilteredItems() {
   console.log("FILTERED (" + searchState.category + "):", filteredItems);
 
   // Budget filter (wisata gratis selalu lolos)
+  if (searchState.budget && searchState.budget.length === 2) {
+    const minB = searchState.budget[0];
+    const maxB = searchState.budget[1];
+    items = items.filter(i => {
+      const p = i.price || 0;
+      if (p === 0) return true; // Gratis selalu lolos atau sesuaikan? Ya, gratis lolos
+      return p >= minB && p <= maxB;
+    });
+  }
+
   if (+searchState.wifi > 0) items = items.filter(i => i.wifi >= +searchState.wifi);
   if (searchState.rating > 0) items = items.filter(i => i.rating >= searchState.rating);
   if (searchState.suasana.length > 0) {
@@ -283,19 +403,18 @@ function initMap() {
   const allItems = [...(API_DATA.penginapan||[]), ...(API_DATA.workspace||[]), ...(API_DATA.wisata||[]), ...(API_DATA.kuliner||[])];
   allItems.forEach(item => {
     const icon = L.divIcon({
-      html: `<div style="background:#1a4a3a;color:#fff;border-radius:50%;width:32px;height:32px;display:flex;align-items:center;justify-content:center;border:2px solid #fff">📍</div>`,
+      html: `<div style="background:#1a4a3a;color:#fff;border-radius:50%;width:32px;height:32px;display:flex;align-items:center;justify-content:center;border:2px solid #fff"></div>`,
       iconSize: [32, 32], iconAnchor: [16, 16], className: ''
     });
     const marker = L.marker([item.lat, item.lng], { icon }).addTo(mapInstance);
-    marker.bindPopup(`<strong>${item.name}</strong><br/>⭐ ${item.rating}`);
+    marker.bindPopup(`<strong>${item.name}</strong><br/>★ ${item.rating}`);
   });
 }
 
 function handleSearch(val) { searchState.query = val; }
 function applySearch() { renderApp(); }
 function setCategory(cat) { searchState.category = cat; renderApp(); }
-function toggleMap() { searchState.showMap = !searchState.showMap; renderApp(); }
-function toggleInspiration() { searchState.inspirationMode = !searchState.inspirationMode; renderApp(); }
+
 function updateBudget(type, val) {
   const v = +val;
   if (type === 'min') searchState.budget[0] = Math.min(v, searchState.budget[1]);
@@ -314,7 +433,7 @@ function toggleFacility(f) {
   renderApp();
 }
 function setRatingFilter(n) { searchState.rating = searchState.rating === n ? 0 : n; renderApp(); }
-function applyFilters() { renderApp(); showToast('✅ Filter diterapkan!'); }
+function applyFilters() { renderApp(); showToast('Filter diterapkan!'); }
 function resetFilters() {
   searchState = { ...searchState, budget:[100000,1500000], wifi:0, suasana:[], rating:0, facilities:[] };
   renderApp();

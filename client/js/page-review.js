@@ -17,12 +17,14 @@ function renderReviewPage() {
   page.style.paddingBottom = '4rem';
 
   const header = el('div', '');
-  header.style.cssText = 'background:linear-gradient(135deg,var(--green-dark),var(--green));padding:3rem 0 2rem;color:#fff';
+  header.style.cssText = 'position:relative;padding:5rem 0 4rem;color:#fff;overflow:hidden;text-align:center;';
   header.innerHTML = `
-    <div class="container">
-      <div style="display:inline-flex;align-items:center;gap:8px;background:rgba(245,166,35,0.2);border:1px solid rgba(245,166,35,0.4);border-radius:100px;padding:6px 16px;margin-bottom:1rem;font-size:0.875rem;color:var(--gold)">⭐ Review & Share</div>
+    <div style="position:absolute;top:0;left:0;right:0;bottom:0;background-image:url('assets/images/hero-aerial.png');background-size:cover;background-position:center;z-index:0;"></div>
+    <div style="position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(15, 118, 110, 0.85);backdrop-filter:blur(4px);z-index:1;"></div>
+    <div class="container" style="position:relative;z-index:2;">
+      <div style="display:inline-flex;align-items:center;gap:8px;background:rgba(245,166,35,0.2);border:1px solid rgba(245,166,35,0.4);border-radius:100px;padding:6px 16px;margin-bottom:1rem;font-size:0.875rem;color:var(--gold);font-weight:600;"><svg style="width:16px;height:16px" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"></path></svg> Review & Share</div>
       <h1 style="font-family:'Playfair Display',serif;font-size:2.5rem;font-weight:800;margin-bottom:0.5rem">Bagikan Pengalamanmu</h1>
-      <p style="opacity:0.8">Rating detail per kategori untuk membantu workationer lainnya</p>
+      <p style="opacity:0.9;font-size:1.1rem">Berikan rating detail untuk membantu workationer lainnya</p>
     </div>
   `;
   page.appendChild(header);
@@ -56,15 +58,15 @@ function renderReviewForm() {
   card.style.padding = '2rem';
 
   const RATING_CATS = [
-    { key:'wifi', label:'📶 WiFi & Koneksi' },
-    { key:'kenyamanan', label:'🛋️ Kenyamanan Kerja' },
-    { key:'fasilitas', label:'🔌 Fasilitas' },
-    { key:'suasana', label:'🌿 Suasana & Lingkungan' },
-    { key:'value', label:'💰 Harga & Value' },
+    { key:'wifi', label:'WiFi & Koneksi' },
+    { key:'kenyamanan', label:'Kenyamanan Kerja' },
+    { key:'fasilitas', label:'Fasilitas' },
+    { key:'suasana', label:'Suasana & Lingkungan' },
+    { key:'value', label:'Harga & Value' },
   ];
 
   card.innerHTML = `
-    <h2 style="font-size:1.25rem;font-weight:800;color:var(--green-dark);margin-bottom:1.5rem">✍️ Tulis Ulasan</h2>
+    <h2 style="font-size:1.25rem;font-weight:800;color:var(--green-dark);margin-bottom:1.5rem"><svg style="width:24px;height:24px;display:inline-block;vertical-align:bottom;margin-right:8px;color:var(--green);" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg> Tulis Ulasan</h2>
 
     <div class="form-group">
       <label class="form-label">Tempat yang Dikunjungi</label>
@@ -75,7 +77,7 @@ function renderReviewForm() {
     </div>
 
     <div style="margin-bottom:1.5rem">
-      <label class="form-label">⭐ Rating Keseluruhan</label>
+      <label class="form-label">Rating Keseluruhan</label>
       <div class="star-input" id="overall-stars">
         ${[1,2,3,4,5].map(n=>`<span class="${n<=reviewState.overallRating?'active':''}" onclick="setOverallRating(${n})">★</span>`).join('')}
       </div>
@@ -117,8 +119,8 @@ function renderReviewForm() {
     </div>
 
     <div style="display:flex;gap:1rem;margin-top:1.5rem">
-      <button class="btn btn-ghost btn-lg" style="flex:1" onclick="previewReview()">👁️ Preview</button>
-      <button class="btn btn-primary btn-lg" style="flex:1" onclick="submitReview()">✅ Kirim Ulasan</button>
+      <button class="btn btn-ghost btn-lg" style="flex:1" onclick="previewReview()"><svg style="width:18px;height:18px;display:inline-block;vertical-align:bottom;margin-right:6px;" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg> Preview</button>
+      <button class="btn btn-primary btn-lg" style="flex:1" onclick="submitReview()">Kirim Ulasan</button>
     </div>
   `;
   return card;
@@ -127,8 +129,8 @@ function renderReviewForm() {
 function renderSubmittedPreview() {
   const wrap = el('div', 'slide-up');
   wrap.innerHTML = `
-    <div style="background:#d1fae5;border-radius:16px;padding:2rem;text-align:center;margin-bottom:1.5rem">
-      <div style="font-size:3rem;margin-bottom:0.5rem">🎉</div>
+    <div style="background:#FAF9F6;border:1px solid #d1fae5;border-radius:16px;padding:2rem;text-align:center;margin-bottom:1.5rem">
+      <div style="margin-bottom:1rem;color:var(--green);"><svg style="width:64px;height:64px;display:inline-block;" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></div>
       <h2 style="font-weight:800;color:#065f46;margin-bottom:0.5rem">Ulasan Terkirim!</h2>
       <p style="color:#059669;font-size:0.875rem">Terima kasih sudah berbagi pengalamanmu</p>
     </div>
@@ -152,13 +154,13 @@ function renderExistingReviews() {
   const statsCard = el('div', 'card mb-4');
   statsCard.style.padding = '1.5rem';
   statsCard.innerHTML = `
-    <h3 style="font-weight:800;font-size:1rem;color:var(--green-dark);margin-bottom:1.25rem">📊 Statistik Ulasan</h3>
+    <h3 style="font-weight:800;font-size:1rem;color:var(--green-dark);margin-bottom:1.25rem"><svg style="width:20px;height:20px;display:inline-block;vertical-align:bottom;margin-right:6px;color:var(--green);" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg> Statistik Ulasan</h3>
     <div style="text-align:center;margin-bottom:1rem">
       <div style="font-size:3rem;font-weight:900;color:var(--green)">4.7</div>
       <div class="stars" style="font-size:1.5rem">⭐⭐⭐⭐⭐</div>
       <div style="font-size:0.8rem;color:var(--gray-400)">dari 124 ulasan</div>
     </div>
-    ${['📶 WiFi','🛋️ Kenyamanan','🔌 Fasilitas','🌿 Suasana','💰 Value'].map((cat,i)=>{
+    ${['WiFi','Kenyamanan','Fasilitas','Suasana','Value'].map((cat,i)=>{
       const score = [4.8,4.6,4.5,4.9,4.5][i];
       return `
         <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:0.625rem;font-size:0.8rem">
@@ -174,7 +176,7 @@ function renderExistingReviews() {
   const reviews = el('div', '');
   const title = el('div', 'fw-700 mb-3');
   title.style.color = 'var(--gray-700)';
-  title.textContent = '💬 Ulasan Pengguna';
+  title.innerHTML = '<svg style="width:18px;height:18px;display:inline-block;vertical-align:bottom;margin-right:6px;color:var(--green);" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg> Ulasan Pengguna';
   wrap.appendChild(title);
 
   const extendedReviews = [
@@ -197,16 +199,16 @@ function renderReviewCard(r, isOwn) {
         <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap">
           <span style="font-weight:700;font-size:0.875rem">${r.name}</span>
           ${isOwn?'<span style="font-size:0.7rem;background:var(--green);color:#fff;padding:2px 8px;border-radius:100px">Anda</span>':''}
-          <span style="font-size:0.7rem;background:#d1fae5;color:#065f46;padding:2px 8px;border-radius:100px">✓ Verified Stay</span>
+          <span style="font-size:0.7rem;background:#d1fae5;color:#065f46;padding:2px 8px;border-radius:100px">Verified Stay</span>
         </div>
         <div style="font-size:0.75rem;color:var(--gray-400)">${r.date}</div>
       </div>
-      <div class="stars">${'⭐'.repeat(r.rating)}</div>
+      <div class="stars">${'★'.repeat(r.rating)}</div>
     </div>
     <p style="font-size:0.875rem;color:var(--gray-600);line-height:1.6;margin-bottom:0.75rem">${r.text}</p>
     ${tagsHtml ? `<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:0.75rem">${tagsHtml}</div>` : ''}
     <div style="display:flex;align-items:center;gap:1rem">
-      <button class="btn btn-ghost btn-sm" onclick="likeReview(this)">👍 Helpful (${Math.floor(Math.random()*20)+1})</button>
+      <button class="btn btn-ghost btn-sm" onclick="likeReview(this)">Helpful (${Math.floor(Math.random()*20)+1})</button>
     </div>
   `;
   return card;

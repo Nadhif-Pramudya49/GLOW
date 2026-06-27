@@ -63,10 +63,10 @@ function renderFooter() {
         </div>
         <div>
           <div style="font-weight:700;color:#fff;margin-bottom:1rem;font-size:0.875rem">Hubungi Kami</div>
-          <div style="font-size:0.8rem;opacity:0.7;line-height:2">📧 glow@gmail.com<br/>📱 +62 858-9986-5721<br/>📍 Gunung Kidul, DIY<br/><br/>
-            <span style="font-size:1.25rem;cursor:pointer;opacity:0.8" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.8">🌐</span>
-            <span style="font-size:1.25rem;cursor:pointer;opacity:0.8;margin:0 8px" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.8">📸</span>
-            <span style="font-size:1.25rem;cursor:pointer;opacity:0.8" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.8">🐦</span>
+          <div style="font-size:0.8rem;opacity:0.7;line-height:2">Email: glow@gmail.com<br/>Tel: +62 858-9986-5721<br/>Location: Gunung Kidul, DIY<br/><br/>
+            <span style="font-size:1.25rem;cursor:pointer;opacity:0.8" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.8">WEB</span>
+            <span style="font-size:1.25rem;cursor:pointer;opacity:0.8;margin:0 8px" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.8">IG</span>
+            <span style="font-size:1.25rem;cursor:pointer;opacity:0.8" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.8">X</span>
           </div>
         </div>
       </div>
@@ -92,11 +92,11 @@ function initHeroSlideshow() {
   const label  = document.getElementById('hero-slide-label');
   if (!slides.length) return;
 
-  // Auto-advance every 5 seconds
+  // Auto-advance every 8 seconds
   _heroSlideTimer = setInterval(() => {
     _heroCurrentSlide = (_heroCurrentSlide + 1) % slides.length;
     _updateSlide(slides, dots, label, _heroCurrentSlide);
-  }, 5000);
+  }, 8000);
 }
 
 function goToSlide(index) {
@@ -129,8 +129,18 @@ function _updateSlide(slides, dots, label, index) {
 
 // ===== INIT APP =====
 document.addEventListener('DOMContentLoaded', () => {
+  const hash = window.location.hash.replace('#', '');
+  if (hash) {
+    State.currentPage = hash;
+  }
   renderApp();
 
-  // Handle browser back/forward
-  window.addEventListener('popstate', () => renderApp());
+  // Handle browser back/forward (hash routing)
+  window.addEventListener('hashchange', () => {
+    const newHash = window.location.hash.replace('#', '');
+    if (newHash && newHash !== State.currentPage) {
+      State.currentPage = newHash || 'search';
+      renderApp();
+    }
+  });
 });

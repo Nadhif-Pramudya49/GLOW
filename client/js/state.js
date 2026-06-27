@@ -1,6 +1,6 @@
 // ===== GLOBAL STATE MANAGER =====
 
-const State = {
+const defaultState = {
   currentPage: 'search',
   package: {
     name: 'Paket Workation Saya',
@@ -20,11 +20,25 @@ const State = {
   },
   savedPackages: JSON.parse(localStorage.getItem('glow_packages') || '[]'),
   listeners: {},
+};
 
+let storedState = null;
+try {
+  const saved = localStorage.getItem('glow_app_state');
+  if (saved) {
+    storedState = JSON.parse(saved);
+  }
+} catch (e) {}
+
+const State = storedState ? { ...defaultState, ...storedState, listeners: {} } : { ...defaultState };
+
+// Re-assign methods since JSON.parse drops them
+Object.assign(State, {
   get(key) { return this[key]; },
 
   set(key, value) {
     this[key] = value;
+    this.saveAppState();
     this.notify(key);
   },
 
@@ -41,6 +55,17 @@ const State = {
     const pkg = { ...this.package, id: Date.now(), saved: new Date().toLocaleDateString('id-ID') };
     this.savedPackages.push(pkg);
     localStorage.setItem('glow_packages', JSON.stringify(this.savedPackages));
+  },
+
+  saveAppState() {
+    try {
+      const toSave = {
+        currentPage: this.currentPage,
+        package: this.package,
+        booking: this.booking
+      };
+      localStorage.setItem('glow_app_state', JSON.stringify(toSave));
+    } catch(e) {}
   },
 
   calcTotal() {
@@ -62,7 +87,7 @@ const State = {
     if (p.activities.length > 0) count++;
     return (count / 4) * 100;
   }
-};
+});
 
 // ===== UTILITY FUNCTIONS =====
 
@@ -74,17 +99,18 @@ function renderStars(rating) {
   const full = Math.floor(rating);
   const half = rating % 1 >= 0.5;
   let s = '';
-  for (let i = 0; i < full; i++) s += '⭐';
-  if (half) s += '✨';
+  for (let i = 0; i < full; i++) s += '★';
+  if (half) s += '★';
   return s;
 }
 
-function getCategoryBadge(cat) {
+function getCategoryBadge(item) {
+  const cat = typeof item === 'string' ? item : item.category;
   const map = {
-    penginapan: { label: '🏨 Penginapan', cls: 'badge-penginapan' },
-    workspace: { label: '☕ Workspace', cls: 'badge-workspace' },
-    wisata: { label: '🏖️ Wisata', cls: 'badge-wisata' },
-    kuliner: { label: '🍽️ Kuliner', cls: 'badge-kuliner' },
+    penginapan: { label: (item && item.type) || 'Akomodasi', cls: 'badge-penginapan' },
+    workspace: { label: 'Cafe & Coworking', cls: 'badge-workspace' },
+    wisata: { label: 'Wisata', cls: 'badge-wisata' },
+    kuliner: { label: 'Kuliner', cls: 'badge-kuliner' },
   };
   return map[cat] || { label: cat, cls: '' };
 }
@@ -104,6 +130,8 @@ function el(tag, cls, html='') {
 function navigate(page, data={}) {
   State.currentPage = page;
   State._navData = data;
+  State.saveAppState();
+  window.history.pushState(null, '', '#' + page);
   renderApp();
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }

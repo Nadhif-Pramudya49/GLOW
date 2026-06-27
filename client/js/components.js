@@ -4,26 +4,29 @@ let _mobileMenuOpen = false;
 
 function renderNavbar() {
   const pages = [
-    { id:'search',       label:'Cari Tempat',     icon:'🔍' },
-    { id:'package',      label:'Package Builder',  icon:'📦' },
-    { id:'booking',      label:'Booking',          icon:'📅' },
-    { id:'productivity', label:'Productivity',     icon:'⚡' },
-    { id:'review',       label:'Review',           icon:'⭐' },
+    { id:'search',       label:'Cari Tempat',     icon:'' },
+    { id:'package',      label:'Package Builder', icon:'' },
+    { id:'booking',      label:'Booking',         icon:'' },
+    { id:'productivity', label:'Productivity',    icon:'' },
+    { id:'review',       label:'Review',          icon:'' },
   ];
 
   const nav = el('nav', 'navbar');
   nav.innerHTML = `
-    <a class="navbar-brand" onclick="navigate('search')">
-      GLOW<span>Gunung Kidul Location for Work</span>
-    </a>
-    <ul class="navbar-nav">
-      ${pages.map(p => `<li><a class="${State.currentPage===p.id?'active':''}" onclick="navigate('${p.id}')">${p.icon} ${p.label}</a></li>`).join('')}
-    </ul>
-    <div class="navbar-actions">
-      <button class="btn btn-primary btn-sm" onclick="navigate('booking')">Booking →</button>
-      <button class="hamburger" id="hamburger-btn" onclick="toggleMobileMenu()" aria-label="Buka Menu" aria-expanded="false">
-        <span></span><span></span><span></span>
-      </button>
+    <div class="navbar-container">
+      <a class="navbar-brand" onclick="navigate('search')">
+        <div class="navbar-brand-logo">GLOW</div>
+        <div class="navbar-brand-tagline">Gunung Kidul Location for Work</div>
+      </a>
+      <ul class="navbar-nav">
+        ${pages.map(p => `<li><a class="${State.currentPage===p.id?'active':''}" onclick="navigate('${p.id}')">${p.label}</a></li>`).join('')}
+      </ul>
+      <div class="navbar-actions">
+        <button class="btn-navbar" onclick="navigate('booking')">Booking Sekarang</button>
+        <button class="hamburger" id="hamburger-btn" onclick="toggleMobileMenu()" aria-label="Buka Menu" aria-expanded="false">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
     </div>
   `;
 
@@ -44,10 +47,9 @@ function renderNavbar() {
   drawer.innerHTML = `
     <!-- Header / Brand -->
     <div class="drawer-header">
-      <span style="font-size:1.5rem">🏔️</span>
       <div>
         <span class="drawer-brand">GLOW</span>
-        <span class="drawer-brand-sub">Gunung Kidul Location for Work</span>
+        <span class="drawer-brand-sub">Gunung Kidul</span>
       </div>
     </div>
 
@@ -55,7 +57,6 @@ function renderNavbar() {
     <nav class="drawer-nav">
       ${pages.map(p => `
         <button class="drawer-link ${State.currentPage===p.id?'active':''}" onclick="navigate('${p.id}');toggleMobileMenu()" aria-label="${p.label}">
-          <span class="dl-icon">${p.icon}</span>
           <span>${p.label}</span>
         </button>
       `).join('')}
@@ -69,7 +70,7 @@ function renderNavbar() {
     <!-- Footer CTA -->
     <div class="drawer-footer">
       <button class="drawer-cta" onclick="navigate('booking');toggleMobileMenu()">
-        📅 Pesan Sekarang
+        Pesan Sekarang
       </button>
     </div>
   `;
@@ -124,7 +125,7 @@ function renderBottomNav() {
 }
 
 function renderItemCard(item, compact=false) {
-  const badge = getCategoryBadge(item.category);
+  const badge = getCategoryBadge(item);
   const priceStr = item.price === 0 ? 'Gratis' : formatRupiah(item.price) + (item.unit ? `/${item.unit}` : '');
   const facIcons = (item.facilities||[]).slice(0,3).map(f => `<span class="facility-icon">${getFacilityIcon(f)}${f}</span>`).join('');
   const suasanaTags = (item.suasana||[]).map(s => `<span class="chip" style="font-size:0.7rem;padding:2px 8px">${s}</span>`).join('');
@@ -132,29 +133,28 @@ function renderItemCard(item, compact=false) {
   const inPackage = (State.package.penginapan?.id === item.id) || State.package.workspaces.some(w=>w.id===item.id) || State.package.activities.some(a=>a.id===item.id);
 
   const card = el('div', 'card slide-in');
+  card.style.height = '100%'; // Ensure card stretches in grid
+  card.setAttribute('onclick', `openDetail('${item.id}','${item.category}')`);
   card.innerHTML = `
     <div style="position:relative">
       <img class="card-img" src="${item.img}" alt="${item.name}" loading="lazy" onerror="this.src='https://picsum.photos/seed/${item.id}/800/600'"/>
-      <span class="badge ${badge.cls}" style="position:absolute;top:12px;left:12px">${badge.label}</span>
-      ${wifiStr ? `<span class="badge" style="position:absolute;top:12px;right:12px;background:rgba(0,0,0,0.6);color:#fff">${wifiStr}</span>` : ''}
+      <span class="pkg-badge" style="top:12px;bottom:auto;">${badge.label}</span>
     </div>
     <div class="card-body">
-      <h3 style="font-size:1rem;font-weight:700;margin-bottom:0.5rem;color:var(--gray-800)">${item.name}</h3>
-      <div class="rating mb-2">
-        <span class="stars">${renderStars(item.rating)}</span>
-        <span class="rating-score">${item.rating}</span>
-        <span class="rating-count">(${item.reviews} ulasan)</span>
+      <h3 style="font-size:1.125rem;font-weight:700;margin-bottom:0.25rem;color:var(--text-main);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${item.name}</h3>
+      <div style="font-size:0.875rem;color:var(--text-sec);margin-bottom:0.75rem;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;line-height:1.4;">${item.desc}</div>
+      <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:1rem;">
+        ${(item.facilities||[]).slice(0,3).map(f => `<span style="font-size:0.7rem;background:var(--gray-100);color:var(--gray-600);padding:2px 6px;border-radius:4px;display:inline-flex;align-items:center;gap:2px">${getFacilityIcon(f)} ${f}</span>`).join('')}
       </div>
-      <div class="flex gap-2 flex-wrap mb-2">${facIcons}</div>
-      <div class="flex gap-1 flex-wrap mb-3">${suasanaTags}</div>
-      <div class="flex items-center justify-between">
-        <span style="font-size:1.1rem;font-weight:800;color:var(--green)">${priceStr}</span>
-      </div>
-      <div class="flex gap-2 mt-3">
-        <button class="btn btn-outline btn-sm" onclick="openDetail('${item.id}','${item.category}')">Lihat Detail</button>
-        <button class="btn ${inPackage?'btn-ghost':'btn-primary'} btn-sm" onclick="addToPackage('${item.id}','${item.category}')">
-          ${inPackage ? '✓ Di Paket' : '+ Tambah ke Paket'}
-        </button>
+      <div class="flex items-center justify-between mt-auto" style="border-top:1px solid var(--gray-100);padding-top:1rem;">
+        <div>
+          <div style="font-size:0.75rem;color:var(--gray-500);margin-bottom:2px">Mulai dari</div>
+          <div style="font-size:1rem;font-weight:800;color:var(--green-dark)">${priceStr}</div>
+        </div>
+        <div class="rating" style="background:#fef3c7;padding:4px 8px;border-radius:100px;">
+          <span class="stars" style="color:#d97706;font-size:0.8rem">★</span>
+          <span class="rating-score" style="color:#b45309;font-weight:700;font-size:0.875rem">${item.rating}</span>
+        </div>
       </div>
     </div>
   `;
@@ -162,10 +162,10 @@ function renderItemCard(item, compact=false) {
 }
 
 function openDetail(id, cat) {
-  const items = DATA[cat];
-  const item = items.find(x => x.id === id);
+  const items = API_DATA?.[cat] || [];
+  const item = items.find(x => x.id == id);
   if (!item) return;
-  const badge = getCategoryBadge(item.category);
+  const badge = getCategoryBadge(item);
   const priceStr = item.price === 0 ? 'Gratis' : formatRupiah(item.price) + `/${item.unit}`;
   const facItems = (item.facilities||[]).map(f => `<span style="display:inline-flex;align-items:center;gap:4px;padding:6px 12px;background:var(--gray-100);border-radius:8px;font-size:0.8rem">${getFacilityIcon(f)} ${f}</span>`).join('');
   const reviewsHtml = DUMMY_REVIEWS.map(r => `
@@ -176,7 +176,7 @@ function openDetail(id, cat) {
           <div style="font-weight:600;font-size:0.875rem">${r.name}</div>
           <div style="font-size:0.75rem;color:var(--gray-400)">${r.date}</div>
         </div>
-        <div class="stars ml-auto">${'⭐'.repeat(r.rating)}</div>
+        <div class="stars ml-auto">${'★'.repeat(Math.round(r.rating))}</div>
       </div>
       <p style="font-size:0.875rem;color:var(--gray-600)">${r.text}</p>
       <span style="font-size:0.7rem;background:#d1fae5;color:#065f46;padding:2px 8px;border-radius:100px">✓ Verified Stay</span>
