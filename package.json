@@ -1,4 +1,11 @@
 {
+  "name": "glow",
+  "version": "1.0.0",
+  "scripts": {
+    "start": "node server/server.js",
+    "build": "npx prisma generate",
+    "seed": "node prisma/seed.js"
+  },
   "prisma": {
     "seed": "node prisma/seed.js"
   },

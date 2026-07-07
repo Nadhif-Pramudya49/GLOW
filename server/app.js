@@ -19,9 +19,8 @@ app.use(express.urlencoded({ extended: true }));
 // Serve static folder for uploads
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-app.get('/', (req, res) => {
-  res.json({ message: 'GLOW Discovery API is running' });
-});
+// Serve frontend (client) as static files
+app.use(express.static(path.join(__dirname, '..', 'client')));
 
 const packageRoutes = require('./routes/package.routes');
 const favoriteRoutes = require('./routes/favorite.routes');
@@ -36,6 +35,11 @@ app.use('/api/productivity', productivityRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/packages', packageRoutes);
 app.use('/api/favorites', favoriteRoutes);
+
+// SPA catch-all: serve index.html for any non-API route
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, '..', 'client', 'index.html'));
+});
 
 // Global Error Handler
 app.use((err, req, res, next) => {
