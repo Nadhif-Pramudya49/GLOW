@@ -6,3 +6,7 @@ npm-debug.log*
 .DS_Store
 dist/
 build/
+server/uploads/*
+!server/uploads/.gitkeep
+temp-puppeteer*/
+temp_api.json
