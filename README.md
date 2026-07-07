@@ -182,6 +182,7 @@ Proyek ini dikembangkan untuk mata kuliah **Pengembangan Sistem Informasi (PSI)*
 | Nama | NIM | Role |
 |---|---|---|
 | Nadhif Pramudya | — | Developer |
+| Anjalin Aida Faza | — | Tester |
 
 ---
 
