@@ -1,7 +1,8 @@
 // ===== PAGE: REVIEW =====
 
 let reviewState = {
-  selectedPlace: null,
+  selectedBookingId: null,
+  myBookings: null, // null means not loaded yet
   ratings: { wifi:0, kenyamanan:0, fasilitas:0, suasana:0, value:0 },
   overallRating: 0,
   reviewText: '',
@@ -13,18 +14,30 @@ let reviewState = {
 const REVIEW_TAGS = ['Recommended','Bakal Balik Lagi','Untuk Solo','Untuk Tim','Budget-Friendly','Premium'];
 
 function renderReviewPage() {
+  if (reviewState.myBookings === null) {
+    reviewState.myBookings = [];
+    if (window.BookingService) {
+      BookingService.getMyBookings().then(res => {
+        if (Array.isArray(res)) {
+          // Filter only completed bookings for review
+          reviewState.myBookings = res.filter(b => b.status === 'COMPLETED' || new Date(b.endDate) < new Date());
+        }
+        renderApp();
+      });
+    }
+  }
+
   const page = el('div', 'page fade-in');
   page.style.paddingBottom = '4rem';
 
   const header = el('div', '');
   header.style.cssText = 'position:relative;padding:5rem 0 4rem;color:#fff;overflow:hidden;text-align:center;';
   header.innerHTML = `
-    <div style="position:absolute;top:0;left:0;right:0;bottom:0;background-image:url('assets/images/hero-aerial.png');background-size:cover;background-position:center;z-index:0;"></div>
-    <div style="position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(15, 118, 110, 0.85);backdrop-filter:blur(4px);z-index:1;"></div>
+    <div style="position:absolute;top:0;left:0;right:0;bottom:0;background-image:url('assets/images/hero-culture.png');background-size:cover;background-position:center;z-index:0;"></div>
+    <div style="position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(17, 24, 39, 0.7);z-index:1;"></div>
     <div class="container" style="position:relative;z-index:2;">
-      <div style="display:inline-flex;align-items:center;gap:8px;background:rgba(245,166,35,0.2);border:1px solid rgba(245,166,35,0.4);border-radius:100px;padding:6px 16px;margin-bottom:1rem;font-size:0.875rem;color:var(--gold);font-weight:600;"><svg style="width:16px;height:16px" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"></path></svg> Review & Share</div>
-      <h1 style="font-family:'Playfair Display',serif;font-size:2.5rem;font-weight:800;margin-bottom:0.5rem">Bagikan Pengalamanmu</h1>
-      <p style="opacity:0.9;font-size:1.1rem">Berikan rating detail untuk membantu workationer lainnya</p>
+      <h1 style="font-size:2.5rem;font-weight:800;margin-bottom:0.5rem;letter-spacing:-0.02em;">Ulasan & Pengalaman</h1>
+      <p style="opacity:0.9;font-size:1.1rem;max-width:500px;margin:0 auto;">Bagikan pendapat jujurmu untuk membantu workationer lain menemukan tempat terbaik.</p>
     </div>
   `;
   page.appendChild(header);
@@ -53,7 +66,6 @@ function renderReviewPage() {
 }
 
 function renderReviewForm() {
-  const allPlaces = [...DATA.penginapan, ...DATA.workspace];
   const card = el('div', 'card');
   card.style.padding = '2rem';
 
@@ -65,14 +77,25 @@ function renderReviewForm() {
     { key:'value', label:'Harga & Value' },
   ];
 
+  if (!State.user) {
+    card.innerHTML = `
+      <h2 style="font-size:1.25rem;font-weight:800;color:var(--green-dark);margin-bottom:1rem"><svg style="width:24px;height:24px;display:inline-block;vertical-align:bottom;margin-right:8px;color:var(--green);" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg> Tulis Ulasan</h2>
+      <div style="padding:2rem;text-align:center;background:var(--gray-50);border-radius:12px;border:1px dashed var(--gray-300);">
+        <p style="color:var(--gray-600);margin-bottom:1rem;">Anda harus login terlebih dahulu untuk menulis ulasan.</p>
+        <button class="btn btn-primary" onclick="showAuthModal('login')">Masuk / Daftar</button>
+      </div>
+    `;
+    return card;
+  }
+
   card.innerHTML = `
     <h2 style="font-size:1.25rem;font-weight:800;color:var(--green-dark);margin-bottom:1.5rem"><svg style="width:24px;height:24px;display:inline-block;vertical-align:bottom;margin-right:8px;color:var(--green);" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg> Tulis Ulasan</h2>
 
     <div class="form-group">
-      <label class="form-label">Tempat yang Dikunjungi</label>
-      <select class="form-input" onchange="reviewState.selectedPlace=this.value;renderApp()">
-        <option value="">-- Pilih tempat --</option>
-        ${allPlaces.map(p=>`<option value="${p.id}" ${reviewState.selectedPlace===p.id?'selected':''}>${p.name}</option>`).join('')}
+      <label class="form-label">Booking yang Dikunjungi</label>
+      <select class="form-input" onchange="reviewState.selectedBookingId=this.value;renderApp()">
+        <option value="">-- Pilih Booking --</option>
+        ${reviewState.myBookings.map(b=>`<option value="${b.id}" ${reviewState.selectedBookingId==b.id?'selected':''}>${b.package?.location?.name || 'Lokasi'} - ${new Date(b.startDate).toLocaleDateString()}</option>`).join('')}
       </select>
     </div>
 
@@ -180,7 +203,6 @@ function renderExistingReviews() {
   wrap.appendChild(title);
 
   const extendedReviews = [
-    ...DUMMY_REVIEWS,
     { name:'Sinta Dewi', avatar:'SD', color:'#dc2626', rating:5, date:'2 Jan 2025', text:'Workation terbaik yang pernah saya lakukan! Pantai + WiFi kencang = surga remote work.' },
     { name:'Budi Santoso', avatar:'BS', color:'#7c3aed', rating:4, date:'20 Des 2024', text:'Suasana tenang, bikin fokus. Sate klathaknya juga enak banget!' },
   ];
@@ -255,19 +277,36 @@ function previewReview() {
   `);
 }
 
-function submitReview() {
+async function submitReview() {
+  if (!reviewState.selectedBookingId) { showToast('⚠️ Pilih booking terlebih dahulu!'); return; }
   if (!reviewState.overallRating) { showToast('⚠️ Berikan rating keseluruhan dulu!'); return; }
-  reviewState.previewCard = {
-    name: 'Kamu',
-    avatar: 'KM',
-    color: '#1a4a3a',
+  
+  const payload = {
+    bookingId: reviewState.selectedBookingId,
     rating: reviewState.overallRating,
-    date: new Date().toLocaleDateString('id-ID'),
-    text: reviewState.reviewText || 'Pengalaman workation yang luar biasa!',
-    tags: reviewState.tags,
+    wifiRating: reviewState.ratings.wifi || reviewState.overallRating,
+    workspaceRating: reviewState.ratings.kenyamanan || reviewState.overallRating,
+    ambienceRating: reviewState.ratings.suasana || reviewState.overallRating,
+    comment: reviewState.reviewText
   };
-  reviewState.submitted = true;
-  renderApp();
+
+  try {
+    await window.ReviewService.submitReview(payload);
+    reviewState.previewCard = {
+      name: State.user ? State.user.fullName : 'Kamu',
+      avatar: State.user ? State.user.fullName.substring(0,2).toUpperCase() : 'KM',
+      color: '#1a4a3a',
+      rating: reviewState.overallRating,
+      date: new Date().toLocaleDateString('id-ID'),
+      text: reviewState.reviewText || 'Pengalaman workation yang luar biasa!',
+      tags: reviewState.tags,
+    };
+    reviewState.submitted = true;
+    showToast('✅ Ulasan berhasil dikirim!');
+    renderApp();
+  } catch (error) {
+    showToast('❌ Gagal mengirim ulasan.');
+  }
 }
 
 function likeReview(btn) {

@@ -1,0 +1,46 @@
+### GLOW Authentication API Test Suite
+# Gunakan ekstensi REST Client di VSCode untuk menjalankan script ini.
+
+@baseUrl = http://localhost:5000/api
+@token = {{login.response.body.token}}
+
+### 1. Register User Baru
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "fullName": "Test User",
+  "email": "testuser@example.com",
+  "password": "password123",
+  "role": "USER"
+}
+
+### 2. Register Owner Baru (Akan membuat Business Profile)
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "fullName": "Test Owner",
+  "email": "testowner@example.com",
+  "password": "password123",
+  "role": "OWNER",
+  "businessName": "PT Test Pariwisata"
+}
+
+### 3. Login
+# @name login
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "budi@example.com",
+  "password": "password123"
+}
+
+### 4. Dapatkan Profil Saat Ini (Requires Token)
+GET {{baseUrl}}/auth/me
+Authorization: Bearer {{token}}
+
+### 5. Uji Coba Token Tidak Valid
+GET {{baseUrl}}/auth/me
+Authorization: Bearer token-asal-asalan-123

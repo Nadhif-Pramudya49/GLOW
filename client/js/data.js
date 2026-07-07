@@ -1,50 +1,60 @@
 // ===== DATA DUMMY GLOW APP =====
-
-const DATA = {
-  penginapan: [
-    { id:'p1', category:'penginapan', name:'Villa Pantai Indrayanti', price:850000, unit:'malam', rating:4.8, reviews:124, wifi:50, facilities:['AC','Kolam Renang','Parkir'], suasana:['Pemandangan laut'], lat:-8.145, lng:110.62, img:'assets/images/p1-villa-indrayanti.png', desc:'Villa mewah dengan pemandangan langsung ke Pantai Indrayanti. Nikmati deburan ombak dari kamar tidur Anda. Fasilitas lengkap untuk workation nyaman.' },
-    { id:'p2', category:'penginapan', name:'Omah Bambu Gunung Kidul', price:350000, unit:'malam', rating:4.6, reviews:89, wifi:20, facilities:['AC','Parkir'], suasana:['Tenang','Alam'], lat:-8.165, lng:110.595, img:'assets/images/p2-omah-bambu.png', desc:'Penginapan unik berbahan bambu di tengah alam hijau. Suasana tenang jauh dari keramaian, cocok untuk deep work.' },
-    { id:'p3', category:'penginapan', name:'Homestay Tepus Asri', price:200000, unit:'malam', rating:4.3, reviews:67, wifi:10, facilities:['Parkir'], suasana:['Lokal','Autentik'], lat:-8.17, lng:110.61, img:'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=800&q=80', desc:'Homestay sederhana namun nyaman dengan nuansa lokal Gunung Kidul yang autentik. Harga terjangkau, cocok untuk budget traveler.' },
-    { id:'p4', category:'penginapan', name:'Bintang Selatan Resort', price:1200000, unit:'malam', rating:4.9, reviews:203, wifi:100, facilities:['AC','Kolam Renang','Spa','Parkir'], suasana:['Premium'], lat:-8.14, lng:110.63, img:'assets/images/p4-bintang-selatan.png', desc:'Resort bintang lima di tepi pantai selatan. Layanan premium, fasilitas spa, dan koneksi internet ultra-cepat 100 Mbps.' },
-    { id:'p5', category:'penginapan', name:'Karang Agung Guesthouse', price:280000, unit:'malam', rating:4.4, reviews:45, wifi:15, facilities:['AC'], suasana:['Tenang'], lat:-8.16, lng:110.60, img:'https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=800&q=80', desc:'Guesthouse bersih dan nyaman dengan AC. Cocok untuk solo workationer yang butuh ketenangan.' },
-    { id:'p6', category:'penginapan', name:'Pondok Joglo Heritage', price:450000, unit:'malam', rating:4.7, reviews:78, wifi:30, facilities:['AC','Parkir'], suasana:['Budaya Jawa'], lat:-8.155, lng:110.59, img:'assets/images/p6-joglo-heritage.png', desc:'Penginapan bergaya Joglo tradisional dengan sentuhan modern. Rasakan harmoni budaya Jawa di tengah alam Gunung Kidul.' },
-  ],
-  workspace: [
-    { id:'w1', category:'workspace', name:'Segara Cafe & Cowork', price:50000, unit:'hari', rating:4.9, reviews:312, wifi:100, facilities:['Colokan','AC','Parkir'], suasana:['Pemandangan laut','Outdoor'], lat:-8.147, lng:110.621, img:'assets/images/w1-segara-cafe.png', desc:'Cafe coworking space terbaik di Gunung Kidul dengan pemandangan laut langsung. WiFi 100 Mbps, banyak colokan, AC dingin.' },
-    { id:'w2', category:'workspace', name:'Kopi Kidul Workspace', price:30000, unit:'hari', rating:4.5, reviews:187, wifi:50, facilities:['Colokan','AC'], suasana:['Tenang','Indoor'], lat:-8.163, lng:110.597, img:'https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=800&q=80', desc:'Workspace dengan nuansa tenang, full AC, dan kopi pilihan Gunung Kidul. Tempat ideal untuk deep work.' },
-    { id:'w3', category:'workspace', name:'Obelix Sea View Cafe', price:45000, unit:'hari', rating:4.8, reviews:256, wifi:75, facilities:['Colokan','Parkir'], suasana:['View bukit & laut'], lat:-8.148, lng:110.618, img:'assets/images/w3-obelix-cafe.png', desc:'Cafe dengan view bukit dan laut yang memukau. Tempat terbaik untuk kerja sambil menikmati pemandangan alam.' },
-    { id:'w4', category:'workspace', name:'Hutan Pinus Cowork', price:25000, unit:'hari', rating:4.3, reviews:98, wifi:20, facilities:['Colokan','Parkir'], suasana:['Outdoor','Sejuk'], lat:-8.17, lng:110.585, img:'assets/images/w4-hutan-pinus.png', desc:'Coworking space outdoor di bawah pohon pinus. Udara segar dan suasana sejuk untuk meningkatkan kreativitas.' },
-    { id:'w5', category:'workspace', name:'Rumah Kreatif GK', price:60000, unit:'hari', rating:4.6, reviews:134, wifi:100, facilities:['Colokan','AC','Parkir'], suasana:['Kolaboratif','Sosial'], lat:-8.158, lng:110.608, img:'https://images.unsplash.com/photo-1497366216548-37526070297c?w=800&q=80', desc:'Hub kreatif untuk kolaborasi. Sering ada event networking, workshop, dan komunitas digital nomad.' },
-    { id:'w6', category:'workspace', name:'Warung Kopi Nelayan', price:15000, unit:'hari', rating:4.2, reviews:56, wifi:10, facilities:['Colokan'], suasana:['Lokal','Tepi pantai'], lat:-8.15, lng:110.625, img:'https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=800&q=80', desc:'Warung kopi sederhana tepi pantai dengan vibe lokal yang kuat. Murah meriah, cocok untuk yang butuh inspirasi.' },
-  ],
-  wisata: [
-    { id:'t1', category:'wisata', name:'Pantai Indrayanti', price:0, unit:'masuk', rating:4.8, reviews:2100, wifi:0, facilities:['Parkir'], suasana:['Pantai','Wisata'], lat:-8.145, lng:110.62, img:'assets/images/t1-pantai-indrayanti.png', desc:'Pantai dengan pasir putih bersih dan air biru jernih. Jarak 2 km dari pusat kota, mudah diakses.' },
-    { id:'t2', category:'wisata', name:'Goa Jomblang', price:450000, unit:'orang', rating:4.9, reviews:876, wifi:0, facilities:['Parkir','Guide'], suasana:['Petualangan'], lat:-8.018, lng:110.652, img:'assets/images/t2-goa-jomblang.png', desc:'Gua vertikal dengan fenomena "cahaya surga" yang menakjubkan. Pengalaman turun abseil ke dalam gua purba.' },
-    { id:'t3', category:'wisata', name:'Pantai Nglambor', price:20000, unit:'orang', rating:4.7, reviews:654, wifi:0, facilities:['Parkir'], suasana:['Snorkeling','Pantai'], lat:-8.178, lng:110.631, img:'assets/images/t3-pantai-nglambor.png', desc:'Pantai tersembunyi dengan spot snorkeling terbaik di Gunung Kidul. Air jernih dan terumbu karang indah.' },
-    { id:'t4', category:'wisata', name:'Bukit Panguk Kediwung', price:10000, unit:'orang', rating:4.6, reviews:432, wifi:0, facilities:['Parkir'], suasana:['Sunrise','Alam'], lat:-7.98, lng:110.595, img:'assets/images/t4-bukit-panguk.png', desc:'Spot terbaik untuk menikmati sunrise di atas lautan kabut. Pemandangan pegunungan yang memukau saat fajar.' },
-    { id:'t5', category:'wisata', name:'Goa Pindul', price:75000, unit:'orang', rating:4.5, reviews:1234, wifi:0, facilities:['Parkir','Guide'], suasana:['Petualangan'], lat:-7.957, lng:110.625, img:'assets/images/t5-goa-pindul.png', desc:'Cave tubing menyusuri sungai bawah tanah sepanjang 350 meter. Aktivitas seru untuk semua kalangan.' },
-    { id:'t6', category:'wisata', name:'Pantai Siung', price:10000, unit:'orang', rating:4.7, reviews:543, wifi:0, facilities:['Parkir'], suasana:['Petualangan','Sunset'], lat:-8.18, lng:110.665, img:'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&q=80', desc:'Pantai dengan tebing batu karang untuk rock climbing. Sunset di sini adalah yang paling dramatis di Gunung Kidul.' },
-  ],
-  kuliner: [
-    { id:'k1', category:'kuliner', name:'Warung Sate Klathak Pak Pong', price:35000, unit:'porsi', rating:4.9, reviews:567, wifi:0, facilities:['Parkir'], suasana:['Kuliner khas','Tradisional'], lat:-8.156, lng:110.601, img:'https://images.unsplash.com/photo-1529543544282-ea669407fca3?w=800&q=80', desc:'Sate klathak legendaris khas Gunung Kidul dengan tusuk besi. Daging kambing empuk dengan bumbu rempah rahasia turun-temurun.' },
-    { id:'k2', category:'kuliner', name:'RM Gudeg Bu Tini', price:20000, unit:'porsi', rating:4.6, reviews:234, wifi:0, facilities:['Parkir'], suasana:['Masakan Jawa'], lat:-8.159, lng:110.605, img:'https://images.unsplash.com/photo-1565557623262-b51c2513a641?w=800&q=80', desc:'Gudeg autentik masakan Jawa dengan resep turun-temurun. Nangka muda dimasak perlahan dengan santan dan rempah pilihan.' },
-    { id:'k3', category:'kuliner', name:'Ikan Bakar Pantai Baron', price:45000, unit:'porsi', rating:4.7, reviews:389, wifi:0, facilities:['Parkir'], suasana:['Seafood','Tepi pantai'], lat:-8.166, lng:110.598, img:'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800&q=80', desc:'Seafood segar langsung dari nelayan lokal. Ikan dibakar dengan bumbu khas sambil menikmati pemandangan Pantai Baron.' },
-    { id:'k4', category:'kuliner', name:'Bakmi Jawa Pak Gareng', price:18000, unit:'porsi', rating:4.5, reviews:178, wifi:0, facilities:['Parkir'], suasana:['Tradisional','Bakmi'], lat:-8.153, lng:110.607, img:'https://images.unsplash.com/photo-1555126634-323283e090fa?w=800&q=80', desc:'Bakmi Jawa tradisional dimasak dengan tungku kayu bakar. Kuah gurih dan mie lembut yang bikin ketagihan.' },
-    { id:'k5', category:'kuliner', name:'Kopi & Roti Gunung Kidul', price:25000, unit:'porsi', rating:4.4, reviews:145, wifi:15, facilities:['Colokan','Parkir'], suasana:['Brunch','Kafe'], lat:-8.16, lng:110.602, img:'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=800&q=80', desc:'Spot sarapan dan brunch favorit para remote worker. Kopi single origin Gunung Kidul dengan roti bakar artisan.' },
-    { id:'k6', category:'kuliner', name:'Seafood Depot Drini', price:60000, unit:'porsi', rating:4.8, reviews:312, wifi:0, facilities:['Parkir'], suasana:['Seafood','View pantai'], lat:-8.173, lng:110.612, img:'https://images.unsplash.com/photo-1559339352-11d035aa65de?w=800&q=80', desc:'Depot seafood dengan view Pantai Drini yang indah. Menu lengkap mulai udang, kepiting, cumi, dan ikan segar.' },
-  ]
-};
+// DATA Locations have been migrated to MySQL Database.
+const DATA = null;
 
 
 const TRANSPORT_OPTIONS = [
-  { id:'motor', name:'Sewa Motor', price:75000, img:'https://images.unsplash.com/photo-1558981403-c5f9899a28bc?w=800&q=80' },
-  { id:'mobil', name:'Sewa Mobil', price:350000, img:'https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?w=800&q=80' },
-  { id:'ojek', name:'Ojek Online', price:0, img:'https://images.unsplash.com/photo-1558980394-4c7c9299fe96?w=800&q=80', note:'Per perjalanan' },
-  { id:'none', name:'Tidak Perlu', price:0, img:'https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=800&q=80' },
+  { 
+    id:'motor', name:'Sewa Motor', price:75000, img:'assets/images/trans-motor.png',
+    openingHours: 'Setiap Hari, 06:00 - 22:00',
+    seats: '2 Penumpang', fuel: 'Bensin (Pertalite/Pertamax)',
+    agents: ['Bintang Rental', 'Gunung Kidul MotoRent'],
+    terms: ['Wajib menitipkan E-KTP asli.', 'Menunjukkan SIM C yang masih berlaku.', 'Harga di luar BBM.', 'Keterlambatan pengembalian dikenakan denda Rp 10.000/jam.']
+  },
+  { 
+    id:'mobil', name:'Sewa Mobil', price:350000, img:'assets/images/trans-mobil.png',
+    openingHours: 'Setiap Hari, 05:00 - 23:00',
+    seats: '5-7 Penumpang', fuel: 'Bensin (Pertalite/Pertamax)',
+    agents: ['Glow Trans', 'Jogja Maju Lancar'],
+    terms: ['Bisa sewa lepas kunci (syarat ketat) atau dengan supir.', 'Harga sewa 12 jam (belum termasuk BBM dan parkir).', 'Overtime dikenakan denda Rp 35.000/jam.', 'Wajib survei hotel/penginapan.']
+  },
+  { 
+    id:'ojek', name:'Ojek Online', price:0, img:'assets/images/trans-ojol.png', note:'Per perjalanan',
+    openingHours: '24 Jam',
+    seats: '1 Penumpang', fuel: '-',
+    agents: ['Gojek', 'Grab', 'Maxim'],
+    terms: ['Tergantung ketersediaan *driver* di area tujuan.', 'Harga fluktuatif sesuai jam sibuk.', 'Pembayaran langsung melalui aplikasi pihak ketiga.']
+  },
+  { 
+    id:'kereta', name:'Kereta Api (KAI)', price:150000, img:'assets/images/trans-kereta.png',
+    openingHours: 'Sesuai Jadwal', seats: '1 Kursi / Tiket', fuel: '-',
+    agents: ['PT. KAI'], terms: ['Pemesanan H-7 direkomendasikan.', 'Harga bergantung pada kelas dan rute.']
+  },
+  {
+    id:'bus', name:'Bus Antar Kota', price:180000, img:'assets/images/trans-bus.png',
+    openingHours: 'Sesuai Jadwal', seats: '1 Kursi / Tiket', fuel: '-',
+    agents: ['Rosalia Indah', 'Sinar Jaya'], terms: ['Tersedia kelas VIP & Executive.', 'Termasuk servis makan.']
+  },
+  {
+    id:'becak', name:'Becak Tradisional', price:30000, img:'assets/images/trans-becak.png',
+    openingHours: 'Pagi - Sore', seats: '2 Penumpang', fuel: 'Tenaga Manusia',
+    agents: ['Paguyuban Becak'], terms: ['Cocok untuk jarak dekat santai.', 'Harga bisa ditawar.']
+  },
+  {
+    id:'bajai', name:'Bajai / Bemo', price:25000, img:'assets/images/trans-bajai.png',
+    openingHours: 'Fleksibel', seats: '2 Penumpang', fuel: 'Bensin',
+    agents: ['Driver Lokal'], terms: ['Angkutan jarak dekat.', 'Sensasi berkendara yang unik.']
+  },
+  {
+    id:'odong', name:'Odong-Odong Wisata', price:10000, img:'assets/images/trans-odong.png',
+    openingHours: '08:00 - 17:00', seats: 'Terbuka', fuel: '-',
+    agents: ['Komunitas Wisata'], terms: ['Beroperasi di sekitar tempat wisata.', 'Digemari anak-anak.']
+  },
+  {
+    id:'delman', name:'Delman / Andong', price:50000, img:'assets/images/trans-delman.png',
+    openingHours: '08:00 - 18:00', seats: '4 Penumpang', fuel: 'Tenaga Kuda',
+    agents: ['Paguyuban Andong'], terms: ['Wisata keliling kota / alun-alun.', 'Harga untuk 1 putaran rute.']
+  }
 ];
 
-const DUMMY_REVIEWS = [
-  { name:'Arya Pratama', avatar:'AP', color:'#1a4a3a', rating:5, date:'10 Jan 2025', text:'Tempat luar biasa! WiFi kencang, view pantai memukau. Cocok banget buat workation.' },
-  { name:'Dewi Sartika', avatar:'DS', color:'#F5A623', rating:4, date:'5 Jan 2025', text:'Nyaman banget, stafnya ramah. AC dingin, banyak colokan. Kopi enak juga!' },
-  { name:'Rizky Maulana', avatar:'RM', color:'#7c3aed', rating:5, date:'28 Des 2024', text:'Definitely akan balik lagi. Suasananya beda banget, bikin produktif dan rileks.' },
-];
+// Reviews are fetched from DB

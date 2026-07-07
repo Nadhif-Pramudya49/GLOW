@@ -4,7 +4,7 @@ let mapInstance = null;
 let API_DATA = null; // Store for fetched API data
 let searchState = {
   query: '', category: 'semua',
-  budget: [100000, 1500000], wifi: 0,
+  budget: 1500000, wifi: 0,
   suasana: [], rating: 0,
   facilities: [], showMap: false,
   inspirationMode: false,
@@ -12,7 +12,7 @@ let searchState = {
   openFilter: null,
 };
 
-async function renderSearchPage() {
+function renderSearchPage() {
   const page = el('div', 'page');
 
   // Fetch data if not already fetched
@@ -38,29 +38,25 @@ async function renderSearchPage() {
         <style>@keyframes pulse { 0% { opacity: 0.6; } 50% { opacity: 0.3; } 100% { opacity: 0.6; } }</style>
       </div>`;
     
-    try {
-      API_DATA = await LocationService.getLocations();
-
-      setTimeout(renderApp, 0);
-      return page;
-    } catch (error) {
-      console.error('API Fetch Error:', error);
-      if (typeof DATA !== 'undefined') {
-        API_DATA = DATA;
-        setTimeout(renderApp, 0);
-        return page;
+    // Kick off async fetch without blocking the render
+    (async () => {
+      try {
+        API_DATA = await LocationService.getLocations();
+        renderApp();
+      } catch (error) {
+        console.error('API Fetch Error:', error);
+        if (typeof DATA !== 'undefined') {
+          API_DATA = DATA;
+          renderApp();
+        } else {
+          // If no fallback data, show error state on re-render by setting API_DATA to empty array or specific error state
+          API_DATA = [];
+          renderApp();
+        }
       }
-      page.innerHTML = `<div style="text-align:center;padding:8rem 1rem;color:var(--gray-500);max-width:500px;margin:0 auto;">
-        <svg style="width:64px;height:64px;margin-bottom:1.5rem;color:var(--gray-300);display:inline-block;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-        <h3 style="font-family:'Playfair Display',serif;font-size:1.5rem;color:var(--gray-800);margin-bottom:0.5rem;">Gagal memuat data destinasi.</h3>
-        <p style="margin-bottom:2rem;line-height:1.6;">Periksa koneksi atau coba beberapa saat lagi.</p>
-        <button class="btn btn-primary" onclick="renderApp()">
-          <svg style="width:16px;height:16px;margin-right:0.5rem;display:inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
-          Coba Lagi
-        </button>
-      </div>`;
-      return page;
-    }
+    })();
+    
+    return page;
   }
 
   // Hero slides data
@@ -88,11 +84,11 @@ async function renderSearchPage() {
       <h1 class="hero-title">Temukan <span>workation spot</span><br/>sempurna di Gunung Kidul </h1>
       <p class="hero-sub">Cari hotel, cafe, wisata, kuliner semua dalam satu<br/>platform terintegrasi untuk produktivitas maksimal.</p>
       <div class="search-bar">
-        <input type="text" id="hero-search" placeholder="Cari tempat, cafe, wisata, kuliner..." value="${searchState.query}" oninput="handleSearch(this.value)" />
+        <input type="text" id="hero-search" placeholder="Cari tempat, cafe, wisata, kuliner..." value="${searchState.query}" oninput="handleSearch(this.value)" onkeydown="if(event.key==='Enter') applySearch()" />
         <button class="btn btn-primary" onclick="applySearch()">Cari Sekarang</button>
       </div>
       <div class="tabs mt-2" style="justify-content:flex-start">
-        ${[['semua','Semua'],['penginapan','Penginapan'],['workspace','Workspace / Cafe'],['wisata','Wisata'],['kuliner','Kuliner']].map(([id,label])=>`
+        ${[['semua','Semua'],['penginapan','Penginapan'],['workspace','Workspace / Cafe'],['wisata','Wisata'],['kuliner','Kuliner'],['budaya','Budaya']].map(([id,label])=>`
           <button class="tab-btn ${searchState.category===id?'active':''}" onclick="setCategory('${id}')">${label}</button>
         `).join('')}
       </div>
@@ -102,7 +98,7 @@ async function renderSearchPage() {
 
   setTimeout(initHeroSlideshow, 50);
 
-  if (searchState.category === 'semua') {
+  if (searchState.category === 'semua' && !searchState.query) {
     const kat = renderKategoriPopuler();
     kat.classList.add('fade-in');
     page.appendChild(kat);
@@ -122,7 +118,7 @@ async function renderSearchPage() {
   // Map - Always shown
   const mapSec = el('div', 'container mb-4');
   mapSec.style.marginTop = '2rem';
-  mapSec.innerHTML = `<div class="map-container"><div id="map"></div></div>`;
+  mapSec.innerHTML = `<div class="map-container" style="height:400px; border-radius:16px; overflow:hidden; z-index:1; border: 4px solid #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"><div id="map" style="width:100%; height:100%;"></div></div>`;
   page.appendChild(mapSec);
   setTimeout(initMap, 100);
 
@@ -149,9 +145,34 @@ document.addEventListener('click', (e) => {
 
 function renderHorizontalFilter() {
   const wrapper = el('div', 'filter-wrapper');
+  
+  let activeFiltersCount = 0;
+  const activeChips = [];
+
+  if (searchState.budget < 1500000) {
+    activeFiltersCount++;
+    activeChips.push({ id: 'budget', val: '', label: `Maks. ${formatRupiah(searchState.budget)}` });
+  }
+  if (searchState.wifi > 0) {
+    activeFiltersCount++;
+    activeChips.push({ id: 'wifi', val: '', label: `WiFi > ${searchState.wifi} Mbps` });
+  }
+  if (searchState.rating > 0) {
+    activeFiltersCount++;
+    activeChips.push({ id: 'rating', val: '', label: `Rating ${searchState.rating}+` });
+  }
+  if (searchState.suasana.length > 0) {
+    activeFiltersCount += searchState.suasana.length;
+    searchState.suasana.forEach(s => activeChips.push({ id: 'suasana', val: s, label: s }));
+  }
+  if (searchState.facilities.length > 0) {
+    activeFiltersCount += searchState.facilities.length;
+    searchState.facilities.forEach(f => activeChips.push({ id: 'fac', val: f, label: f }));
+  }
+
   const bar = el('div', 'filter-bar container');
   
-  const formatBdgt = searchState.budget[0] > 100000 || searchState.budget[1] < 1500000 ? 'Harga: Ditentukan' : 'Harga';
+  const formatBdgt = searchState.budget < 1500000 ? 'Batas Harga' : 'Harga';
   const formatWifi = searchState.wifi > 0 ? `WiFi: >${searchState.wifi}Mbps` : 'Kecepatan WiFi';
   const formatSuasana = searchState.suasana.length ? `Suasana (${searchState.suasana.length})` : 'Suasana';
   const formatRating = searchState.rating > 0 ? `Rating: ${searchState.rating}+` : 'Rating Minimum';
@@ -164,12 +185,11 @@ function renderHorizontalFilter() {
       </button>
       ${searchState.openFilter === 'budget' ? `
         <div class="filter-dropdown">
-          <div class="filter-dropdown-title">Rentang Harga (per malam/hari)</div>
+          <div class="filter-dropdown-title">Batas Harga Maksimal</div>
           <div id="budget-label" style="font-size:0.875rem;font-weight:600;color:var(--green);margin-bottom:1rem">
-            ${formatRupiah(searchState.budget[0])} – ${formatRupiah(searchState.budget[1])}
+            Maks. ${formatRupiah(searchState.budget)}
           </div>
-          <input type="range" class="range-slider" id="budget-min" min="100000" max="1500000" step="50000" value="${searchState.budget[0]}" oninput="updateBudget('min',this.value)" />
-          <input type="range" class="range-slider" id="budget-max" min="100000" max="1500000" step="50000" value="${searchState.budget[1]}" oninput="updateBudget('max',this.value)" />
+          <input type="range" class="range-slider" min="100000" max="1500000" step="50000" value="${searchState.budget}" oninput="updateBudget(this.value)" onchange="renderApp()" />
         </div>
       ` : ''}
     </div>
@@ -180,13 +200,20 @@ function renderHorizontalFilter() {
       </button>
       ${searchState.openFilter === 'wifi' ? `
         <div class="filter-dropdown">
-          <div class="filter-dropdown-title">Kecepatan WiFi</div>
-          ${[['0','Tidak perlu'],['10','> 10 Mbps'],['50','> 50 Mbps'],['100','> 100 Mbps']].map(([v,l])=>`
-            <label style="display:flex;align-items:center;gap:8px;margin-bottom:10px;cursor:pointer;font-size:0.875rem">
-              <input type="radio" name="wifi" value="${v}" ${searchState.wifi==v?'checked':''} onchange="searchState.wifi=${v};renderApp()" style="accent-color:var(--green)" />
-              ${l}
+          <div class="filter-dropdown-title">Kecepatan WiFi Minimum</div>
+          <div style="display:flex; flex-direction:column; gap:8px;">
+          ${[['0','Tidak perlu','<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 1l22 22M16.72 11.06A10.94 10.94 0 0119 12.55M5 12.55a10.94 10.94 0 015.17-2.39M10.71 5.05A16 16 0 0122.58 9M1.42 9a15.91 15.91 0 014.7-2.88M8.53 16.11a6 6 0 016.95 0M12 20h.01"></path></svg>'],
+             ['10','Dasar (> 10 Mbps)','<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8.53 16.11a6 6 0 016.95 0M12 20h.01"></path></svg>'],
+             ['50','Kencang (> 50 Mbps)','<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12.55a11 11 0 0114.08 0M8.53 16.11a6 6 0 016.95 0M12 20h.01"></path></svg>'],
+             ['100','Ultra (> 100 Mbps)','<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12.55a11 11 0 0114.08 0M1.42 9a16 16 0 0121.16 0M8.53 16.11a6 6 0 016.95 0M12 20h.01"></path></svg>']].map(([v,l,icon])=>`
+            <label style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:12px;cursor:pointer;border:2px solid ${searchState.wifi==v?'var(--green)':'var(--gray-100)'};background:${searchState.wifi==v?'#f0fdf4':'#fff'};transition:all 0.2s cubic-bezier(0.4, 0, 0.2, 1); box-shadow:${searchState.wifi==v?'0 4px 12px rgba(15,118,110,0.1)':'0 2px 4px rgba(0,0,0,0.02)'}" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+              <input type="radio" name="wifi" value="${v}" ${searchState.wifi==v?'checked':''} onchange="searchState.wifi=${v};renderApp()" style="display:none;" />
+              <div style="color:${searchState.wifi==v?'var(--green)':'var(--gray-400)'}; display:flex; align-items:center; justify-content:center;">${icon}</div>
+              <div style="font-size:0.875rem;font-weight:${searchState.wifi==v?'700':'500'};color:${searchState.wifi==v?'var(--green-dark)':'var(--gray-700)'}">${l}</div>
+              ${searchState.wifi==v?`<div style="margin-left:auto;color:var(--green);font-weight:bold;">✓</div>`:''}
             </label>
           `).join('')}
+          </div>
         </div>
       ` : ''}
     </div>
@@ -215,7 +242,7 @@ function renderHorizontalFilter() {
         <div class="filter-dropdown">
           <div class="filter-dropdown-title">Rating Minimum</div>
           <div class="star-input" id="rating-filter">
-            ${[1,2,3,4,5].map(n=>`<span class="${n<=searchState.rating?'active':''}" onclick="setRatingFilter(${n})">★</span>`).join('')}
+            ${[5,4,3,2,1].map(n=>`<span class="${n<=searchState.rating?'active':''}" onclick="setRatingFilter(${n})">★</span>`).join('')}
           </div>
         </div>
       ` : ''}
@@ -238,22 +265,42 @@ function renderHorizontalFilter() {
       ` : ''}
     </div>
 
-    <div style="margin-left:auto">
-      <button class="btn btn-ghost" onclick="resetFilters()" style="padding:0.5rem 1rem">Bersihkan Filter</button>
+    <div style="margin-left:auto; display:flex; align-items:center;">
+      <span style="font-size:0.875rem; font-weight:600; color:var(--green); margin-right:0.5rem; display:flex; align-items:center; gap:0.35rem;">
+        <svg style="width:16px;height:16px" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg>
+        Filter ${activeFiltersCount > 0 ? `(${activeFiltersCount})` : ''}
+      </span>
     </div>
   `;
   wrapper.appendChild(bar);
+
+  if (activeChips.length > 0) {
+    const chipsRow = el('div', 'container');
+    chipsRow.style.cssText = 'display:flex; align-items:center; flex-wrap:wrap; gap:0.5rem; padding-bottom:1rem; margin-top:-0.5rem;';
+    
+    chipsRow.innerHTML = `
+      ${activeChips.map(chip => `
+        <div style="display:inline-flex;align-items:center;gap:6px;padding:4px 12px;background:var(--green-light);color:var(--green-dark);border:1px solid var(--green);border-radius:20px;font-size:0.75rem;cursor:pointer" onclick="removeFilter('${chip.id}', '${chip.val}')" onmouseover="this.style.background='#d1f0e4'" onmouseout="this.style.background='var(--green-light)'">
+          ${chip.label} <span style="font-weight:900; font-size:1rem; line-height:1;">&times;</span>
+        </div>
+      `).join('')}
+      <button class="btn btn-ghost" style="font-size:0.75rem;padding:4px 8px;color:var(--red);" onclick="resetFilters()">Reset Semua Filter</button>
+    `;
+    wrapper.appendChild(chipsRow);
+  }
+
   return wrapper;
 }
 
 function renderSearchResults() {
   const wrap = el('div', '');
+  wrap.id = 'search-results-container';
   const items = getFilteredItems();
   const header = el('div', 'flex items-center justify-between mb-3');
   header.innerHTML = `
     <div>
       <span style="font-weight:700;color:var(--gray-700)">${items.length} tempat ditemukan</span>
-      <span style="font-size:0.875rem;color:var(--gray-400);margin-left:8px">• ${searchState.category === 'penginapan' ? 'Penginapan' : searchState.category === 'workspace' ? 'Workspace' : searchState.category === 'wisata' ? 'Wisata' : 'Kuliner'}</span>
+      <span style="font-size:0.875rem;color:var(--gray-400);margin-left:8px">• ${searchState.category === 'penginapan' ? 'Penginapan' : searchState.category === 'workspace' ? 'Workspace' : searchState.category === 'wisata' ? 'Wisata' : searchState.category === 'kuliner' ? 'Kuliner' : searchState.category === 'budaya' ? 'Budaya' : 'Semua'}</span>
     </div>
     <select class="form-input" style="width:auto;padding:6px 12px" onchange="sortResults(this.value)">
       <option value="rating"   ${searchState.sortBy==='rating'   ?'selected':''}>Urutkan: Rating Terbaik</option>
@@ -264,7 +311,14 @@ function renderSearchResults() {
   wrap.appendChild(header);
   const grid = el('div', 'grid-4');
   if (items.length === 0) {
-    grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:3rem;color:var(--gray-400)"><p>Tidak ada hasil ditemukan.</p></div>`;
+    grid.style.gridColumn = '1 / -1';
+    grid.innerHTML = `
+      <div style="text-align:center; padding:4rem 1rem; width:100%;">
+        <svg style="width:80px;height:80px;color:var(--gray-300);margin:0 auto 1.5rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+        <h3 style="font-size:1.25rem;font-weight:700;color:var(--gray-800);margin-bottom:0.5rem">Tidak ada tempat yang sesuai</h3>
+        <p style="color:var(--gray-500);margin-bottom:1.5rem">Maaf, kami tidak dapat menemukan lokasi dengan kriteria filter tersebut. Coba ubah pencarian atau hapus filter Anda.</p>
+        <button class="btn btn-outline" onclick="resetFilters()">Bersihkan Filter</button>
+      </div>`;
   } else {
     items.forEach(item => grid.appendChild(renderItemCard(item)));
   }
@@ -273,7 +327,7 @@ function renderSearchResults() {
 }
 
 function renderInspirationMode() {
-  const allItems = [...(API_DATA.penginapan||[]), ...(API_DATA.workspace||[]), ...(API_DATA.wisata||[]), ...(API_DATA.kuliner||[])];
+  const allItems = [...(API_DATA.penginapan||[]), ...(API_DATA.workspace||[]), ...(API_DATA.wisata||[]), ...(API_DATA.kuliner||[]), ...(API_DATA.budaya||[])];
   const heights = [220, 280, 200, 260, 240, 300];
   const sec = el('div', 'container', '');
   sec.style.cssText = 'padding-top:2rem;padding-bottom:4rem';
@@ -308,7 +362,7 @@ function renderKategoriPopuler() {
     <div class="grid-4" style="gap:1.5rem">
       <!-- Card 1 -->
       <div style="position:relative; border-radius:12px; overflow:hidden; height:280px; cursor:pointer; background:#000;" onclick="setCategory('penginapan')">
-        <div style="position:absolute; inset:0; background:url('assets/images/hero-beach.png') center/cover; opacity:0.8; transition:transform 0.5s ease" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'"></div>
+        <div style="position:absolute; inset:0; background:url('assets/images/p7-luxury-cabin.png') center/cover; opacity:0.8; transition:transform 0.5s ease" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'"></div>
         <div style="position:absolute; inset:0; background:linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.8) 100%);"></div>
         <div style="position:absolute; inset:0; padding:1.5rem; display:flex; flex-direction:column; justify-content:flex-end; color:#fff">
           <h3 style="font-family:'Playfair Display', serif; font-size:1.5rem; margin-bottom:0.5rem">Penginapan</h3>
@@ -318,7 +372,7 @@ function renderKategoriPopuler() {
       </div>
       <!-- Card 2 -->
       <div style="position:relative; border-radius:12px; overflow:hidden; height:280px; cursor:pointer; background:#000;" onclick="setCategory('workspace')">
-        <div style="position:absolute; inset:0; background:url('assets/images/hero-culture.png') center/cover; opacity:0.8; transition:transform 0.5s ease" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'"></div>
+        <div style="position:absolute; inset:0; background:url('assets/images/w3-obelix-cafe.png') center/cover; opacity:0.8; transition:transform 0.5s ease" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'"></div>
         <div style="position:absolute; inset:0; background:linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.8) 100%);"></div>
         <div style="position:absolute; inset:0; padding:1.5rem; display:flex; flex-direction:column; justify-content:flex-end; color:#fff">
           <h3 style="font-family:'Playfair Display', serif; font-size:1.5rem; margin-bottom:0.5rem">Workspace / Cafe</h3>
@@ -338,7 +392,7 @@ function renderKategoriPopuler() {
       </div>
       <!-- Card 4 -->
       <div style="position:relative; border-radius:12px; overflow:hidden; height:280px; cursor:pointer; background:#000;" onclick="setCategory('kuliner')">
-        <div style="position:absolute; inset:0; background:url('assets/images/hero-culture.png') center/cover; opacity:0.8; transition:transform 0.5s ease" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'"></div>
+        <div style="position:absolute; inset:0; background:url('assets/images/act-gudeg.png') center/cover; opacity:0.8; transition:transform 0.5s ease" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'"></div>
         <div style="position:absolute; inset:0; background:linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.8) 100%);"></div>
         <div style="position:absolute; inset:0; padding:1.5rem; display:flex; flex-direction:column; justify-content:flex-end; color:#fff">
           <h3 style="font-family:'Playfair Display', serif; font-size:1.5rem; margin-bottom:0.5rem">Kuliner</h3>
@@ -354,7 +408,7 @@ function renderKategoriPopuler() {
 function getFilteredItems() {
   let items = [];
   if (searchState.category === 'semua' && API_DATA) {
-    items = [...(API_DATA.penginapan||[]), ...(API_DATA.workspace||[]), ...(API_DATA.wisata||[]), ...(API_DATA.kuliner||[])];
+    items = [...(API_DATA.penginapan||[]), ...(API_DATA.workspace||[]), ...(API_DATA.wisata||[]), ...(API_DATA.kuliner||[]), ...(API_DATA.budaya||[])];
   } else {
     items = (API_DATA && API_DATA[searchState.category]) || [];
   }
@@ -369,13 +423,11 @@ function getFilteredItems() {
   console.log("FILTERED (" + searchState.category + "):", filteredItems);
 
   // Budget filter (wisata gratis selalu lolos)
-  if (searchState.budget && searchState.budget.length === 2) {
-    const minB = searchState.budget[0];
-    const maxB = searchState.budget[1];
+  if (searchState.budget && searchState.budget < 1500000) {
     items = items.filter(i => {
       const p = i.price || 0;
-      if (p === 0) return true; // Gratis selalu lolos atau sesuaikan? Ya, gratis lolos
-      return p >= minB && p <= maxB;
+      if (p === 0) return true;
+      return p <= searchState.budget;
     });
   }
 
@@ -393,34 +445,130 @@ function getFilteredItems() {
   return items;
 }
 
+window.mapMarkers = {};
+
 function initMap() {
   const mapEl = document.getElementById('map');
-  if (!mapEl || !window.L || !API_DATA) return;
-  if (mapInstance) { mapInstance.remove(); mapInstance = null; }
-  mapInstance = L.map('map').setView([-8.15, 110.61], 12);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap contributors' }).addTo(mapInstance);
+  if (!mapEl || !window.L || typeof API_DATA === 'undefined') return;
+  
+  if (!document.getElementById('map-styles')) {
+    const s = el('style', '');
+    s.id = 'map-styles';
+    s.textContent = `.custom-popup .leaflet-popup-content-wrapper { padding: 0; overflow: hidden; border-radius: 12px; } .custom-popup .leaflet-popup-content { margin: 0; width: 220px !important; }`;
+    document.head.appendChild(s);
+  }
 
-  const allItems = [...(API_DATA.penginapan||[]), ...(API_DATA.workspace||[]), ...(API_DATA.wisata||[]), ...(API_DATA.kuliner||[])];
-  allItems.forEach(item => {
+  if (mapInstance) {
+    mapInstance.remove();
+    mapInstance = null;
+  }
+  
+  mapInstance = L.map('map', { attributionControl: false }).setView([-8.15, 110.61], 12);
+  L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', { attribution: '© Google Maps', maxZoom: 20 }).addTo(mapInstance);
+  
+  updateMapMarkers();
+}
+
+function updateMapMarkers() {
+  if (!mapInstance) return;
+  
+  if (window.mapMarkers) {
+    Object.values(window.mapMarkers).forEach(m => mapInstance.removeLayer(m));
+  }
+  window.mapMarkers = {};
+  
+  const items = getFilteredItems();
+  items.forEach(item => {
+    if (!item.lat || !item.lng || isNaN(item.lat) || isNaN(item.lng)) return;
+    
     const icon = L.divIcon({
-      html: `<div style="background:#1a4a3a;color:#fff;border-radius:50%;width:32px;height:32px;display:flex;align-items:center;justify-content:center;border:2px solid #fff"></div>`,
+      html: `<div style="background:#173f35;color:#fff;border-radius:50%;width:32px;height:32px;display:flex;align-items:center;justify-content:center;border:2px solid #fff;box-shadow:0 2px 4px rgba(0,0,0,0.3);transition:all 0.3s ease;" id="marker-icon-${item.id}">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+      </div>`,
       iconSize: [32, 32], iconAnchor: [16, 16], className: ''
     });
+    
     const marker = L.marker([item.lat, item.lng], { icon }).addTo(mapInstance);
-    marker.bindPopup(`<strong>${item.name}</strong><br/>★ ${item.rating}`);
+    
+    const popupHtml = `
+      <div style="width: 220px; padding: 0;">
+        <img src="${item.img}" style="width: 100%; height: 120px; object-fit: cover; border-radius: 12px 12px 0 0;" onerror="this.src='https://picsum.photos/seed/${item.id}/800/600'" />
+        <div style="padding: 12px;">
+          <h4 style="margin: 0 0 4px 0; font-size: 14px; font-weight: 700; color: #111;">${item.name}</h4>
+          <div style="font-size: 12px; color: #666; margin-bottom: 8px;"><span style="color: var(--gold);">★</span> ${item.rating} • ${item.category}</div>
+          <div style="font-size: 14px; font-weight: 800; color: var(--green-dark); margin-bottom: 12px;">${item.price === 0 ? 'Gratis' : formatRupiah(item.price)}</div>
+          <button class="btn btn-primary" style="width: 100%; padding: 6px; font-size: 12px; border-radius: 6px;" onclick="openDetail('${item.id}', '${item.category}')">Lihat Detail</button>
+        </div>
+      </div>
+    `;
+    
+    marker.bindPopup(popupHtml, { padding: '0px', className: 'custom-popup' });
+    
+    marker.on('click', () => {
+      setActiveMarker(item.id);
+      highlightCard(item.id, false); // false = jangan scroll, supaya popup terlihat
+    });
+    
+    window.mapMarkers[item.id] = marker;
   });
 }
 
-function handleSearch(val) { searchState.query = val; }
-function applySearch() { renderApp(); }
+function setActiveMarker(itemId) {
+  Object.keys(window.mapMarkers).forEach(id => {
+    const el = document.getElementById(`marker-icon-${id}`);
+    if (el) {
+      el.style.background = '#173f35';
+      el.style.transform = 'scale(1)';
+      el.style.zIndex = '1';
+    }
+  });
+  const activeEl = document.getElementById(`marker-icon-${itemId}`);
+  if (activeEl) {
+    activeEl.style.background = '#ef4444';
+    activeEl.style.transform = 'scale(1.2)';
+    activeEl.style.zIndex = '1000';
+  }
+}
+
+window.setActiveMarker = setActiveMarker;
+
+function highlightCard(itemId, shouldScroll = true) {
+  const cards = document.querySelectorAll('.item-card-airbnb');
+  cards.forEach(c => c.style.border = '2px solid transparent');
+  const card = document.getElementById(`card-${itemId}`);
+  if (card) {
+    card.style.border = '2px solid var(--green)';
+    if (shouldScroll) {
+      card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }
+}
+
+let _searchTimeout = null;
+function handleSearch(val) { 
+  searchState.query = val; 
+  clearTimeout(_searchTimeout);
+  _searchTimeout = setTimeout(() => {
+    const container = document.getElementById('search-results-container');
+    if (container) {
+      const newResults = renderSearchResults();
+      container.innerHTML = newResults.innerHTML;
+      if (typeof updateMapMarkers === 'function') updateMapMarkers();
+    } else {
+      renderApp();
+    }
+  }, 400);
+}
+function applySearch() { 
+  clearTimeout(_searchTimeout);
+  renderApp(); 
+}
 function setCategory(cat) { searchState.category = cat; renderApp(); }
 
-function updateBudget(type, val) {
-  const v = +val;
-  if (type === 'min') searchState.budget[0] = Math.min(v, searchState.budget[1]);
-  else searchState.budget[1] = Math.max(v, searchState.budget[0]);
+function updateBudget(val) {
+  searchState.budget = +val;
   const lbl = document.getElementById('budget-label');
-  if (lbl) lbl.textContent = `${formatRupiah(searchState.budget[0])} – ${formatRupiah(searchState.budget[1])}`;
+  if (lbl) lbl.textContent = `Maks. ${formatRupiah(searchState.budget)}`;
 }
 function toggleSuasana(s) {
   const idx = searchState.suasana.indexOf(s);
@@ -435,7 +583,15 @@ function toggleFacility(f) {
 function setRatingFilter(n) { searchState.rating = searchState.rating === n ? 0 : n; renderApp(); }
 function applyFilters() { renderApp(); showToast('Filter diterapkan!'); }
 function resetFilters() {
-  searchState = { ...searchState, budget:[100000,1500000], wifi:0, suasana:[], rating:0, facilities:[] };
+  searchState = { ...searchState, query:'', budget:1500000, wifi:0, suasana:[], rating:0, facilities:[] };
+  renderApp();
+}
+function removeFilter(type, val) {
+  if (type === 'budget') searchState.budget = 1500000;
+  if (type === 'wifi') searchState.wifi = 0;
+  if (type === 'rating') searchState.rating = 0;
+  if (type === 'suasana') searchState.suasana = searchState.suasana.filter(s => s !== val);
+  if (type === 'fac') searchState.facilities = searchState.facilities.filter(f => f !== val);
   renderApp();
 }
 function sortResults(by) { searchState.sortBy = by; renderApp(); }

@@ -2,8 +2,8 @@
   --green: #0F766E;
   --green-light: #14B8A6;
   --green-dark: #134E4A;
-  --gold: #0F766E;
-  --gold-light: #14B8A6;
+  --gold: #F59E0B;
+  --gold-light: #FBBF24;
   --white: #ffffff;
   --bg-color: #F9FAFB;
   --surface: #FFFFFF;
@@ -36,6 +36,18 @@ body {
   background: var(--gray-50);
   color: var(--gray-800);
   line-height: 1.6;
+  letter-spacing: -0.01em;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+}
+
+*:focus-visible {
+  outline: 2px solid var(--green);
+  outline-offset: 2px;
 }
 
 /* ===== NAVBAR ===== */
@@ -106,13 +118,13 @@ body {
   display: inline-flex; align-items: center; gap: 0.5rem;
   padding: 0.5rem 1rem; border-radius: 8px;
   font-size: 0.875rem; font-weight: 500; cursor: pointer;
-  border: 1px solid transparent; transition: var(--transition); text-decoration: none;
+  border: 1px solid transparent; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); text-decoration: none;
   white-space: nowrap;
 }
-.btn-primary { background: #173F35; color: var(--white); }
-.btn-primary:hover { background: #102A23; transform: none; box-shadow: none; }
+.btn-primary { background: #173F35; color: var(--white); box-shadow: 0 2px 4px rgba(23,63,53,0.1); }
+.btn-primary:hover { background: #102A23; transform: translateY(-2px); box-shadow: 0 6px 12px rgba(23,63,53,0.25); }
 .btn-secondary { background: var(--green); color: var(--white); }
-.btn-secondary:hover { background: var(--green-dark); transform: none; }
+.btn-secondary:hover { background: var(--green-dark); transform: translateY(-2px); box-shadow: 0 6px 12px rgba(15,118,110,0.25); }
 .btn-outline { background: var(--surface); color: var(--text-main); border: 1px solid var(--border); }
 .btn-outline:hover { background: var(--gray-50); color: var(--text-main); }
 .btn-ghost { background: transparent; color: var(--text-sec); border: 1px solid transparent; }
@@ -128,11 +140,11 @@ body {
   background: var(--surface); border-radius: var(--radius-lg);
   border: 1px solid var(--border);
   box-shadow: var(--shadow-sm); overflow: hidden;
-  transition: var(--transition);
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   cursor: pointer;
   display: flex; flex-direction: column;
 }
-.card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+.card:hover { box-shadow: 0 12px 24px rgba(0,0,0,0.08); transform: translateY(-6px); border-color: var(--gray-300); }
 .card-img { width: 100%; height: 240px; object-fit: cover; border-bottom: 1px solid var(--border); }
 .card-body { padding: 1.25rem; display: flex; flex-direction: column; flex: 1; }
 
@@ -157,7 +169,7 @@ body {
 .chip.active, .chip:hover { background: var(--gray-900); color: var(--white); border-color: var(--gray-900); }
 
 /* ===== STARS ===== */
-.stars { color: var(--green); font-size: 0.875rem; }
+.stars { color: var(--gold); font-size: 0.875rem; }
 .rating { display: flex; align-items: center; gap: 0.375rem; }
 .rating-score { font-weight: 600; color: var(--text-main); }
 .rating-count { font-size: 0.75rem; color: var(--text-sec); }
@@ -169,10 +181,10 @@ body {
   width: 100%; padding: 0.625rem 1rem;
   border: 2px solid var(--gray-200); border-radius: 10px;
   font-size: 0.875rem; font-family: 'Inter', sans-serif;
-  transition: var(--transition); background: var(--white);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); background: var(--white);
   color: var(--gray-800);
 }
-.form-input:focus { outline: none; border-color: var(--green); box-shadow: 0 0 0 3px rgba(26,74,58,0.1); }
+.form-input:focus { outline: none; border-color: var(--green); box-shadow: 0 0 0 4px rgba(15, 118, 110, 0.15); }
 .form-textarea { resize: vertical; min-height: 100px; }
 
 /* ===== SLIDER ===== */
@@ -326,10 +338,10 @@ body {
   border: 1px solid var(--gray-300); background: var(--white);
   font-size: 0.875rem; font-weight: 500; color: var(--text-main);
   cursor: pointer; display: flex; align-items: center; gap: 0.5rem;
-  transition: all 0.2s ease; white-space: nowrap;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); white-space: nowrap;
 }
-.filter-pill:hover { border-color: var(--text-main); }
-.filter-pill.active { border-color: var(--text-main); border-width: 2px; padding: calc(0.5rem - 1px) calc(1rem - 1px); background: var(--gray-50); }
+.filter-pill:hover { border-color: var(--text-main); transform: translateY(-1px); box-shadow: 0 4px 8px rgba(0,0,0,0.06); }
+.filter-pill.active { border-color: var(--text-main); border-width: 2px; padding: calc(0.5rem - 1px) calc(1rem - 1px); background: var(--gray-50); box-shadow: none; transform: translateY(0); }
 .filter-pill.has-value { background: var(--green-dark); color: var(--white); border-color: var(--green-dark); }
 
 .filter-dropdown {
@@ -437,14 +449,18 @@ body {
 .breakdown-row { display: flex; justify-content: space-between; align-items: center; padding: 0.625rem 0; border-bottom: 1px solid var(--gray-100); font-size: 0.875rem; }
 .breakdown-total { font-weight: 800; font-size: 1.1rem; color: var(--green-dark); border-top: 2px solid var(--green); margin-top: 0.5rem; padding-top: 0.75rem; }
 
-/* ===== PKG CAROUSEL ===== */
+.pkg-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 1.5rem;
+  padding-bottom: 1rem;
+}
 .pkg-carousel {
   display: flex; gap: 1.25rem; overflow-x: auto; padding-bottom: 1rem;
   scroll-snap-type: x mandatory; scrollbar-width: none;
 }
 .pkg-carousel::-webkit-scrollbar { display: none; }
 .pkg-card {
-  flex: 0 0 280px; scroll-snap-align: start;
   background: #FAFCFB; border: none; border-radius: 16px;
   overflow: hidden; display: flex; flex-direction: column; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow: 0 4px 15px rgba(0,0,0,0.04);
@@ -478,10 +494,12 @@ body {
 .pkg-card-price span { font-weight: 500; font-size: 0.75rem; color: var(--gray-500); }
 
 /* ===== REVIEW STARS ===== */
-.star-input { display: flex; gap: 0.25rem; }
-.star-input span { font-size: 1.75rem; cursor: pointer; transition: transform 0.15s; color: var(--gray-300); }
+.star-input { display: flex; gap: 0.25rem; flex-direction: row-reverse; justify-content: flex-end; }
+.star-input span { font-size: 1.75rem; cursor: pointer; transition: transform 0.15s, color 0.15s; color: var(--gray-300); }
 .star-input span.active { color: var(--gold); }
-.star-input span:hover { transform: scale(1.2); color: var(--gold); }
+/* Hover magic: turn all gray when container is hovered, then color hovered and its right-siblings (visually left) */
+.star-input:hover span { color: var(--gray-300); transform: scale(1); }
+.star-input span:hover, .star-input span:hover ~ span { transform: scale(1.2); color: var(--gold); }
 
 /* ===== REVIEW CARD ===== */
 .review-card { background: var(--white); border-radius: var(--radius); padding: 1.25rem; box-shadow: var(--shadow-sm); border: 1px solid var(--gray-100); }
@@ -883,4 +901,232 @@ body {
   .tab-btn { min-height: 40px; }
   .chip { min-height: 36px; padding: 0.35rem 0.875rem; }
   input[type="range"] { height: 28px; }
+}
+
+/* ===== DASHBOARD LAYOUT ===== */
+.dashboard-layout {
+  display: flex;
+  height: calc(100vh - 70px);
+  background: #F4F7F6;
+  margin-top: 70px;
+  overflow: hidden;
+}
+.dashboard-sidebar {
+  width: 260px;
+  background: #FFFFFF;
+  border-right: 1px solid rgba(0,0,0,0.05);
+  padding: 2.5rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 2px 0 12px rgba(0,0,0,0.02);
+  z-index: 10;
+  overflow-y: auto;
+}
+.dashboard-content {
+  flex: 1;
+  padding: 3rem 4rem;
+  overflow-y: auto;
+}
+.sidebar-nav {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.sidebar-item {
+  display: flex;
+  align-items: center;
+  padding: 1rem 1.25rem;
+  margin-bottom: 0.5rem;
+  border-radius: 12px;
+  color: var(--gray-500);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.sidebar-item:hover {
+  background: #F9FAFB;
+  color: var(--gray-800);
+  transform: translateX(4px);
+}
+.sidebar-item.active {
+  background: var(--green);
+  color: #FFFFFF;
+  box-shadow: 0 4px 12px rgba(23, 63, 53, 0.2);
+}
+.dashboard-header {
+  margin-bottom: 2.5rem;
+}
+.dashboard-header h1 {
+  font-size: 2.25rem;
+  font-weight: 900;
+  color: var(--gray-900);
+  margin-bottom: 0.5rem;
+  letter-spacing: -0.02em;
+}
+.dashboard-header p {
+  color: var(--gray-500);
+  font-size: 1.1rem;
+}
+.dashboard-card {
+  background: #FFFFFF;
+  border: 1px solid rgba(0,0,0,0.04);
+  border-radius: 16px;
+  padding: 1.75rem;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.03);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.dashboard-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 30px rgba(0,0,0,0.06);
+}
+
+/* =========================================
+   ZEN MODE (Productivity)
+   ========================================= */
+body.zen-mode {
+  background-color: #043927 !important;
+  transition: background-color 0.5s ease;
+}
+
+body.zen-mode .navbar,
+body.zen-mode footer,
+body.zen-mode #bottom-nav {
+  opacity: 0 !important;
+  pointer-events: none !important;
+  visibility: hidden;
+  transition: all 0.5s ease;
+}
+
+body.zen-mode .page {
+  transform: none; /* Removed ugly translation */
+}
+
+/* Make the hero background span the entire page */
+body.zen-mode .prod-hero-bg {
+  position: fixed !important;
+  height: 100vh !important;
+}
+body.zen-mode .prod-hero-overlay {
+  position: fixed !important;
+  height: 100vh !important;
+  background: rgba(4, 57, 39, 0.90) !important;
+  backdrop-filter: blur(12px) !important;
+}
+
+/* Glassmorphism for all cards */
+body.zen-mode .card, body.zen-mode .modal-overlay .card {
+  background: rgba(255, 255, 255, 0.08) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.25) !important;
+  color: #ffffff !important;
+}
+
+/* Ensure text inside cards turns white for legibility */
+body.zen-mode .card *, body.zen-mode .card h2, body.zen-mode .card h3 {
+  color: #ffffff !important;
+}
+
+/* Keep the icons bright emerald */
+body.zen-mode .card svg {
+  color: #10b981 !important;
+}
+
+/* Fix specific texts that were gray */
+body.zen-mode .card [style*="color:var(--gray-400)"],
+body.zen-mode .card [style*="color:var(--gray-500)"] {
+  color: rgba(255, 255, 255, 0.7) !important;
+}
+
+body.zen-mode .card [style*="color:var(--gray-900)"] {
+  color: #ffffff !important;
+}
+
+/* Fix inputs and selects inside cards */
+body.zen-mode .card select, body.zen-mode .card input {
+  background: rgba(255, 255, 255, 0.1) !important;
+  color: #fff !important;
+  border-color: rgba(255, 255, 255, 0.2) !important;
+}
+body.zen-mode .card select option {
+  background: #043927 !important;
+  color: #fff !important;
+}
+
+/* =========================================
+   DOPAMINE CHECKBOX
+   ========================================= */
+.dopamine-checkbox {
+  position: relative;
+  display: inline-block;
+  width: 24px;
+  height: 24px;
+  cursor: pointer;
+  margin-right: 12px;
+}
+.dopamine-checkbox input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+.dopamine-checkbox .checkmark {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 24px;
+  width: 24px;
+  background-color: #f3f4f6;
+  border: 2px solid #e5e7eb;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+.dopamine-checkbox input:checked ~ .checkmark {
+  background-color: #10b981;
+  border-color: #10b981;
+  animation: pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.dopamine-checkbox .checkmark:after {
+  content: "";
+  position: absolute;
+  display: none;
+  left: 7px;
+  top: 3px;
+  width: 5px;
+  height: 10px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+.dopamine-checkbox input:checked ~ .checkmark:after {
+  display: block;
+  animation: check-draw 0.3s ease-in-out forwards;
+}
+
+@keyframes pop {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+  100% { transform: scale(1); }
+}
+
+@keyframes check-draw {
+  0% { opacity: 0; transform: rotate(45deg) scale(0); }
+  100% { opacity: 1; transform: rotate(45deg) scale(1); }
+}
+
+/* =========================================
+   HEADER ANIMATIONS
+   ========================================= */
+@keyframes floatCard {
+  0% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+  100% { transform: translateY(0); }
+}
+
+@keyframes spinSun {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }

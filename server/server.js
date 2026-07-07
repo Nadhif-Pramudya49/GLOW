@@ -29,3 +29,4 @@ process.on('SIGINT', () => {
     process.exit(0);
   });
 });
+app.post('/api/log', require('express').json(), (req, res) => { console.log('BROWSER LOG:', req.body); res.sendStatus(200); }); 
