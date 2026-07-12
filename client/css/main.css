@@ -548,14 +548,14 @@ h1, h2, h3, h4, h5, h6 {
   display: none;
   flex-direction: column; justify-content: center; align-items: center;
   width: 44px; height: 44px; gap: 5px;
-  background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12);
+  background: transparent; border: none;
   border-radius: 10px; cursor: pointer; padding: 4px;
   transition: background 0.2s ease;
 }
-.hamburger:active { background: rgba(255,255,255,0.18); }
+.hamburger:active { background: rgba(0,0,0,0.05); }
 .hamburger span {
-  display: block; width: 20px; height: 2px;
-  background: rgba(255,255,255,0.9); border-radius: 2px;
+  display: block; width: 22px; height: 2px;
+  background: var(--green); border-radius: 2px;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   transform-origin: center;
 }
