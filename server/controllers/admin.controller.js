@@ -61,14 +61,37 @@ exports.getStats = async (req, res) => {
       _sum: { totalPrice: true },
       where: { status: { in: ['COMPLETED', 'CONFIRMED'] } }
     });
+
+    const allBookings = await prisma.booking.findMany({
+      select: { startDate: true, status: true, totalPrice: true }
+    });
+
+    let monthlyRevenue = new Array(12).fill(0);
+    let bookingsByStatus = { PENDING: 0, CONFIRMED: 0, COMPLETED: 0, CANCELLED: 0 };
     
+    const currentYear = new Date().getFullYear();
+
+    allBookings.forEach(b => {
+      if (bookingsByStatus[b.status] !== undefined) {
+        bookingsByStatus[b.status]++;
+      }
+      if (b.status === 'COMPLETED' || b.status === 'CONFIRMED') {
+        const d = new Date(b.startDate);
+        if (d.getFullYear() === currentYear) {
+          monthlyRevenue[d.getMonth()] += Number(b.totalPrice) || 0;
+        }
+      }
+    });
+
     res.json({
       stats: {
         totalUsers,
         totalOwners,
         totalLocations,
         totalBookings,
-        revenue: revenueResult._sum.totalPrice || 0
+        revenue: revenueResult._sum.totalPrice || 0,
+        monthlyRevenue,
+        bookingsByStatus
       }
     });
   } catch(error) {
@@ -118,6 +141,19 @@ exports.updateUserRole = async (req, res) => {
       data: { role },
       select: { id: true, fullName: true, email: true, role: true }
     });
+
+    if (role === 'OWNER') {
+      await prisma.businessProfile.upsert({
+        where: { userId: user.id },
+        update: {},
+        create: {
+          userId: user.id,
+          businessName: user.fullName + ' Business',
+          status: 'PENDING'
+        }
+      });
+    }
+
     res.json({ user });
   } catch (error) {
     console.error(error);

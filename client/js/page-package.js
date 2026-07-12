@@ -352,7 +352,7 @@ function renderPackagePage() {
       </button>
     </div>
     
-    <div id="ai-wizard-inline-container" style="display:none; margin-top:1.5rem; width:100%; max-width:550px; background:#fff; border-radius:24px; box-shadow:0 15px 35px rgba(0,0,0,0.1); border:1px solid var(--gray-200); overflow:hidden; z-index:11; position:relative;"></div>
+    <div id="ai-wizard-inline-container" style="display:none; margin-top:1.5rem; width:100%; max-width:850px; background:#fff; border-radius:24px; box-shadow:0 15px 35px rgba(0,0,0,0.1); border:1px solid var(--gray-200); overflow:hidden; z-index:11; position:relative;"></div>
   `;
   page.appendChild(datePickerBar);
 
@@ -1448,64 +1448,210 @@ window.toggleAiWizardInline = () => {
   
   container.style.display = 'block';
   container.classList.add('expand-in');
+  
+  // Custom modern AI wizard HTML
   container.innerHTML = `
-    <div style="background:linear-gradient(135deg, var(--green-dark), var(--green));padding:1.5rem;color:#fff;display:flex;align-items:center;gap:1rem;">
-      <div style="font-size:2rem;">✨</div>
-      <div>
-        <h2 style="font-family:'Playfair Display',serif;font-size:1.5rem;font-weight:800;margin-bottom:0.25rem;">AI Magic Builder</h2>
-        <p style="opacity:0.9;font-size:0.9rem;margin:0;">Jawab 3 pertanyaan singkat, dan biarkan AI meracik liburan impianmu!</p>
+    <!-- Top Illustration Header -->
+    <div style="background: linear-gradient(135deg, rgba(209,250,229,0.3) 0%, rgba(255,255,255,0) 100%); padding: 2.5rem 2.5rem 1rem 2.5rem; display: flex; justify-content: space-between; align-items: center; position: relative; overflow: hidden; border-bottom: 1px solid rgba(16,185,129,0.1);">
+      
+      <!-- Background Circles -->
+      <div style="position:absolute; top:-50px; left:-50px; width:200px; height:200px; background:radial-gradient(circle, rgba(16,185,129,0.1) 0%, rgba(255,255,255,0) 70%); border-radius:50%;"></div>
+      <div style="position:absolute; bottom:-100px; right:10%; width:300px; height:300px; background:radial-gradient(circle, rgba(16,185,129,0.08) 0%, rgba(255,255,255,0) 70%); border-radius:50%;"></div>
+
+      <div style="position: relative; z-index: 2; max-width: 400px;">
+        <div style="display:inline-flex; align-items:center; gap:6px; background:var(--green); color:white; padding:4px 12px; border-radius:100px; font-size:0.75rem; font-weight:700; margin-bottom:1rem; box-shadow: 0 4px 10px rgba(16,185,129,0.3);">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"></path></svg>
+          AI Magic Builder
+        </div>
+        <h2 style="font-family:'Playfair Display',serif; font-size:2.2rem; font-weight:800; color:#111827; margin-bottom:0.75rem; line-height:1.2;">
+          Siap meracik liburan<br/>impianmu? ✨
+        </h2>
+        <p style="color:#4B5563; font-size:0.95rem; line-height:1.5; margin:0;">
+          Cukup jawab 3 pertanyaan singkat,<br/>
+          AI akan buatkan rekomendasi terbaik untukmu.
+        </p>
+      </div>
+
+      <!-- 3D Illustration Area (Placeholder) -->
+      <div style="position: relative; z-index: 2; width: 250px; height: 180px; display: flex; justify-content: center; align-items: center;">
+        <div style="position:absolute; right: -20px; top: -30px; font-size:6rem; filter: drop-shadow(0 10px 15px rgba(0,0,0,0.1)); animation: float-up-down 3s ease-in-out infinite;">🤖</div>
+        <div style="position:absolute; left: -10px; top: 10px; font-size:2.5rem; filter: drop-shadow(0 5px 10px rgba(0,0,0,0.1)); animation: float-up-down 4s ease-in-out infinite reverse;">🧳</div>
+        <div style="position:absolute; right: -40px; bottom: 20px; font-size:2.5rem; filter: drop-shadow(0 5px 10px rgba(0,0,0,0.1)); animation: float-up-down 3.5s ease-in-out infinite 1s;">🏝️</div>
+        <div style="position:absolute; right: 50px; bottom: 10px; font-size:2rem; filter: drop-shadow(0 5px 10px rgba(0,0,0,0.1)); animation: float-up-down 2.5s ease-in-out infinite 0.5s;">📸</div>
+        
+        <svg width="200" height="100" viewBox="0 0 200 100" style="position:absolute; top:20px; left:0; z-index:-1; opacity:0.3">
+          <path d="M 10 90 Q 100 -20 190 90" fill="none" stroke="var(--green)" stroke-width="2" stroke-dasharray="6 6" stroke-linecap="round"></path>
+        </svg>
       </div>
     </div>
     
-    <div style="padding:1.5rem;" id="ai-wizard-content">
-      <!-- Question 1 -->
-      <div class="ai-step" id="ai-step-1">
-        <h4 style="font-size:1rem;font-weight:700;margin-bottom:1rem;color:var(--gray-800);">1. Berlibur dengan siapa?</h4>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;">
-          <button class="btn-ai-choice" onclick="selectAiOption(1, 'Solo Traveler')">Solo Traveler</button>
-          <button class="btn-ai-choice" onclick="selectAiOption(1, 'Pasangan')">Pasangan</button>
-          <button class="btn-ai-choice" onclick="selectAiOption(1, 'Keluarga')">Keluarga</button>
-          <button class="btn-ai-choice" onclick="selectAiOption(1, 'Tim Kerja')">Tim Kerja</button>
+    <!-- Wizard Forms -->
+    <div style="background:var(--white); padding:2rem 2.5rem 3rem 2.5rem; border-radius: 0 0 24px 24px;" id="ai-wizard-content">
+      
+      <!-- STEP 1 -->
+      <div class="ai-step-modern" id="ai-step-1">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 1.5rem;">
+          <div style="display:flex; align-items:center; gap:0.75rem;">
+            <div style="width:28px; height:28px; background:var(--green); color:white; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.9rem;">1</div>
+            <h4 style="font-size:1.15rem; font-weight:700; color:var(--gray-800); margin:0;">Berlibur dengan <span style="color:var(--green)">siapa?</span></h4>
+          </div>
+          <!-- Stepper Indicators -->
+          <div style="display:flex; align-items:center; gap:0.5rem;">
+             <div style="width:24px; height:24px; background:var(--green); color:white; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.75rem;">1</div>
+             <div style="width:20px; height:2px; background:var(--gray-200);"></div>
+             <div style="width:24px; height:24px; background:var(--gray-200); color:var(--gray-500); border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.75rem;">2</div>
+             <div style="width:20px; height:2px; background:var(--gray-200);"></div>
+             <div style="width:24px; height:24px; background:var(--gray-200); color:var(--gray-500); border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.75rem;">3</div>
+          </div>
+        </div>
+        
+        <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:1rem;">
+          <button class="ai-card-btn" onclick="selectAiOptionModern(1, 'Solo Traveler')">
+            <div class="ai-card-icon" style="background:#D1FAE5; color:#059669;">
+               <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+            </div>
+            <div class="ai-card-title">Solo Traveler</div>
+            <div class="ai-card-desc">Perjalanan sendiri lebih bebas</div>
+            <div class="ai-radio-btn"></div>
+          </button>
+
+          <button class="ai-card-btn" onclick="selectAiOptionModern(1, 'Pasangan')">
+            <div class="ai-card-icon" style="background:#EDE9FE; color:#7C3AED;">
+               <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+            </div>
+            <div class="ai-card-title">Pasangan</div>
+            <div class="ai-card-desc">Quality time berdua</div>
+            <div class="ai-radio-btn"></div>
+          </button>
+
+          <button class="ai-card-btn" onclick="selectAiOptionModern(1, 'Keluarga')">
+            <div class="ai-card-icon" style="background:#FFEDD5; color:#EA580C;">
+               <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+            </div>
+            <div class="ai-card-title">Keluarga</div>
+            <div class="ai-card-desc">Liburan seru bersama keluarga</div>
+            <div class="ai-radio-btn"></div>
+          </button>
+
+          <button class="ai-card-btn" onclick="selectAiOptionModern(1, 'Tim Kerja')">
+            <div class="ai-card-icon" style="background:#DBEAFE; color:#2563EB;">
+               <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor"><path d="M20 6h-4V4c0-1.11-.89-2-2-2h-4c-1.11 0-2 .89-2 2v2H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-6 0h-4V4h4v2z"/></svg>
+            </div>
+            <div class="ai-card-title">Tim Kerja</div>
+            <div class="ai-card-desc">Workation atau company trip</div>
+            <div class="ai-radio-btn"></div>
+          </button>
         </div>
       </div>
       
-      <!-- Question 2 -->
-      <div class="ai-step" id="ai-step-2" style="display:none;">
-        <h4 style="font-size:1rem;font-weight:700;margin-bottom:1rem;color:var(--gray-800);">2. Suasana apa yang dicari?</h4>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;">
-          <button class="btn-ai-choice" onclick="selectAiOption(2, 'Tenang & Alam')">Tenang & Alam</button>
-          <button class="btn-ai-choice" onclick="selectAiOption(2, 'Pantai & Laut')">Pantai & Laut</button>
-          <button class="btn-ai-choice" onclick="selectAiOption(2, 'Modern & Cafe')">Modern & Cafe</button>
-          <button class="btn-ai-choice" onclick="selectAiOption(2, 'Seni & Budaya')">Seni & Budaya</button>
+      <!-- STEP 2 -->
+      <div class="ai-step-modern" id="ai-step-2" style="display:none;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 1.5rem;">
+          <div style="display:flex; align-items:center; gap:0.75rem;">
+            <div style="width:28px; height:28px; background:var(--green); color:white; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.9rem;">2</div>
+            <h4 style="font-size:1.15rem; font-weight:700; color:var(--gray-800); margin:0;">Suasana apa yang <span style="color:var(--green)">dicari?</span></h4>
+          </div>
+          <!-- Stepper Indicators -->
+          <div style="display:flex; align-items:center; gap:0.5rem;">
+             <div style="width:24px; height:24px; background:var(--green); color:white; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.75rem;">✓</div>
+             <div style="width:20px; height:2px; background:var(--green);"></div>
+             <div style="width:24px; height:24px; background:var(--green); color:white; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.75rem;">2</div>
+             <div style="width:20px; height:2px; background:var(--gray-200);"></div>
+             <div style="width:24px; height:24px; background:var(--gray-200); color:var(--gray-500); border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.75rem;">3</div>
+          </div>
+        </div>
+        
+        <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:1rem;">
+          <button class="ai-card-btn" onclick="selectAiOptionModern(2, 'Tenang & Alam')">
+            <div class="ai-card-icon" style="background:#DCFCE7; color:#16A34A;">🍃</div>
+            <div class="ai-card-title">Tenang & Alam</div>
+            <div class="ai-card-desc">Jauh dari hiruk pikuk kota</div>
+            <div class="ai-radio-btn"></div>
+          </button>
+
+          <button class="ai-card-btn" onclick="selectAiOptionModern(2, 'Pantai & Laut')">
+            <div class="ai-card-icon" style="background:#E0F2FE; color:#0284C7;">🌊</div>
+            <div class="ai-card-title">Pantai & Laut</div>
+            <div class="ai-card-desc">Suara ombak menenangkan</div>
+            <div class="ai-radio-btn"></div>
+          </button>
+
+          <button class="ai-card-btn" onclick="selectAiOptionModern(2, 'Modern & Cafe')">
+            <div class="ai-card-icon" style="background:#FEF3C7; color:#D97706;">☕</div>
+            <div class="ai-card-title">Modern & Cafe</div>
+            <div class="ai-card-desc">Cepat & Estetik</div>
+            <div class="ai-radio-btn"></div>
+          </button>
+
+          <button class="ai-card-btn" onclick="selectAiOptionModern(2, 'Seni & Budaya')">
+            <div class="ai-card-icon" style="background:#FCE7F3; color:#DB2777;">🎭</div>
+            <div class="ai-card-title">Seni & Budaya</div>
+            <div class="ai-card-desc">Lokal & Tradisional</div>
+            <div class="ai-radio-btn"></div>
+          </button>
         </div>
       </div>
       
-      <!-- Question 3 -->
-      <div class="ai-step" id="ai-step-3" style="display:none;">
-        <h4 style="font-size:1rem;font-weight:700;margin-bottom:1rem;color:var(--gray-800);">3. Kategori Budget Anda?</h4>
-        <div style="display:grid;grid-template-columns:1fr;gap:0.75rem;">
-          <button class="btn-ai-choice" onclick="selectAiOption(3, 'Hemat', 1500000)">Hemat (Max Rp 1.5 Jt)</button>
-          <button class="btn-ai-choice" onclick="selectAiOption(3, 'Menengah', 3500000)">Menengah (Max Rp 3.5 Jt)</button>
-          <button class="btn-ai-choice" onclick="selectAiOption(3, 'Sultan', 10000000)">Sultan (Max Rp 10 Jt)</button>
+      <!-- STEP 3 -->
+      <div class="ai-step-modern" id="ai-step-3" style="display:none;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 1.5rem;">
+          <div style="display:flex; align-items:center; gap:0.75rem;">
+            <div style="width:28px; height:28px; background:var(--green); color:white; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.9rem;">3</div>
+            <h4 style="font-size:1.15rem; font-weight:700; color:var(--gray-800); margin:0;">Berapa perkiraan <span style="color:var(--green)">budget Anda?</span></h4>
+          </div>
+          <!-- Stepper Indicators -->
+          <div style="display:flex; align-items:center; gap:0.5rem;">
+             <div style="width:24px; height:24px; background:var(--green); color:white; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.75rem;">✓</div>
+             <div style="width:20px; height:2px; background:var(--green);"></div>
+             <div style="width:24px; height:24px; background:var(--green); color:white; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.75rem;">✓</div>
+             <div style="width:20px; height:2px; background:var(--green);"></div>
+             <div style="width:24px; height:24px; background:var(--green); color:white; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.75rem;">3</div>
+          </div>
+        </div>
+        
+        <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:1rem;">
+          <button class="ai-card-btn" onclick="selectAiOptionModern(3, 'Hemat', 1500000)">
+            <div class="ai-card-icon" style="background:#F1F5F9; color:#475569;">🥉</div>
+            <div class="ai-card-title">Hemat / Backpacker</div>
+            <div class="ai-card-desc">Max Rp 1.500.000</div>
+            <div class="ai-radio-btn"></div>
+          </button>
+          
+          <button class="ai-card-btn" onclick="selectAiOptionModern(3, 'Menengah', 3500000)">
+            <div class="ai-card-icon" style="background:#FEF9C3; color:#CA8A04;">🥈</div>
+            <div class="ai-card-title">Menengah / Comfort</div>
+            <div class="ai-card-desc">Max Rp 3.500.000</div>
+            <div class="ai-radio-btn"></div>
+          </button>
+          
+          <button class="ai-card-btn" onclick="selectAiOptionModern(3, 'Sultan', 10000000)">
+            <div class="ai-card-icon" style="background:#FEF08A; color:#EAB308;">🥇</div>
+            <div class="ai-card-title">Sultan / Premium</div>
+            <div class="ai-card-desc">Max Rp 10.000.000</div>
+            <div class="ai-radio-btn"></div>
+          </button>
         </div>
       </div>
       
       <!-- Loading State -->
-      <div class="ai-step" id="ai-step-loading" style="display:none;text-align:center;padding:1.5rem 0;">
-        <div style="width:40px;height:40px;border:3px solid var(--gray-200);border-top-color:var(--green);border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 1rem;"></div>
-        <h4 style="font-size:1rem;font-weight:700;margin-bottom:0.25rem;color:var(--gray-800);">AI Sedang Meracik...</h4>
-        <p style="font-size:0.875rem;color:var(--gray-500);">Menganalisis jutaan kemungkinan.</p>
+      <div class="ai-step-modern" id="ai-step-loading" style="display:none;text-align:center;padding:3rem 0;">
+        <div class="magic-spinner"></div>
+        <h4 style="font-size:1.25rem;font-weight:800;margin-bottom:0.25rem;color:var(--gray-900);margin-top:1.5rem">AI Sedang Meracik Magis... ✨</h4>
+        <p style="font-size:0.95rem;color:var(--gray-500);">Menganalisis jutaan kemungkinan terbaik untuk Anda.</p>
       </div>
 
       <!-- Preview State -->
-      <div class="ai-step" id="ai-step-preview" style="display:none;">
-        <h4 style="font-size:1.1rem;font-weight:800;margin-bottom:1rem;color:var(--gray-900);">✨ Rekomendasi Terpilih</h4>
-        <div id="ai-preview-content" style="display:flex;flex-direction:column;gap:0.75rem;margin-bottom:1.5rem;"></div>
+      <div class="ai-step-modern" id="ai-step-preview" style="display:none;">
+        <h4 style="font-size:1.25rem;font-weight:800;margin-bottom:1.5rem;color:var(--gray-900); display:flex; align-items:center; gap:10px">
+          <span style="background:var(--green-100); color:var(--green-dark); padding:6px 12px; border-radius:8px;">✨</span> Rekomendasi Terpilih
+        </h4>
+        <div id="ai-preview-content" style="display:flex;flex-direction:column;gap:1rem;margin-bottom:2rem; background: #f8fafc; padding: 1.5rem; border-radius: 16px; border: 1px solid #e2e8f0;"></div>
+        
         <div style="display:flex;gap:1rem;align-items:center;">
-          <button style="flex:1;background:linear-gradient(135deg, #10b981 0%, #059669 100%);color:white;border:none;border-radius:12px;padding:0.875rem;font-size:1.05rem;font-weight:800;cursor:pointer;box-shadow:0 6px 16px rgba(16,185,129,0.3);text-align:center;transition:transform 0.2s, box-shadow 0.2s;display:flex;justify-content:center;align-items:center;gap:8px" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 20px rgba(16,185,129,0.4)'" onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 6px 16px rgba(16,185,129,0.3)'" onclick="applyAiRecommendation()">
+          <button style="flex:1;background:linear-gradient(135deg, #10b981 0%, #059669 100%);color:white;border:none;border-radius:12px;padding:1rem;font-size:1.05rem;font-weight:800;cursor:pointer;box-shadow:0 6px 16px rgba(16,185,129,0.3);text-align:center;transition:transform 0.2s, box-shadow 0.2s;display:flex;justify-content:center;align-items:center;gap:8px" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 20px rgba(16,185,129,0.4)'" onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 6px 16px rgba(16,185,129,0.3)'" onclick="applyAiRecommendation()">
             ✨ Terapkan ke Paket
           </button>
-          <button style="background:transparent;border:2px solid var(--gray-200);color:var(--gray-600);border-radius:12px;padding:0.75rem 1.5rem;font-weight:700;font-size:0.95rem;cursor:pointer;text-align:center;transition:all 0.2s;" onmouseover="this.style.background='var(--gray-100)';this.style.color='var(--gray-800)'" onmouseout="this.style.background='transparent';this.style.color='var(--gray-600)'" onclick="cancelAiRecommendation()">
+          <button style="background:transparent;border:2px solid var(--gray-200);color:var(--gray-600);border-radius:12px;padding:0.875rem 2rem;font-weight:700;font-size:1rem;cursor:pointer;text-align:center;transition:all 0.2s;" onmouseover="this.style.background='var(--gray-100)';this.style.color='var(--gray-800)'" onmouseout="this.style.background='transparent';this.style.color='var(--gray-600)'" onclick="cancelAiRecommendation()">
             Batal
           </button>
         </div>
@@ -1517,18 +1663,126 @@ window.toggleAiWizardInline = () => {
     const style = document.createElement('style');
     style.id = 'ai-wizard-styles';
     style.innerHTML = `
-      .btn-ai-choice {
-        background: #f8fafc; border: 1px solid var(--gray-200); border-radius: 12px; padding: 0.75rem;
-        font-weight: 600; font-size: 0.9rem; color: var(--gray-700); cursor: pointer; transition: all 0.2s;
-        text-align: center;
+      .ai-step-modern {
+        animation: fadeSlideUp 0.4s ease-out forwards;
       }
-      .btn-ai-choice:hover { background: #f0fdf4; border-color: var(--green); color: var(--green-dark); transform: translateY(-2px); }
+      @keyframes fadeSlideUp {
+        from { opacity: 0; transform: translateY(15px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      @keyframes fadeOutDown {
+        from { opacity: 1; transform: translateY(0); }
+        to { opacity: 0; transform: translateY(15px); }
+      }
+      .ai-card-btn {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        padding: 1.5rem 1rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.03);
+      }
+      .ai-card-btn:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.08);
+        border-color: #cbd5e1;
+      }
+      .ai-card-btn.selected {
+        border-color: var(--green);
+        background: #f0fdf4;
+        box-shadow: 0 10px 20px -5px rgba(16, 185, 129, 0.15);
+      }
+      .ai-card-icon {
+        width: 64px; height: 64px;
+        border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        margin-bottom: 1rem;
+      }
+      .ai-card-title {
+        font-weight: 700;
+        font-size: 1rem;
+        color: #1e293b;
+        margin-bottom: 0.25rem;
+      }
+      .ai-card-desc {
+        font-size: 0.8rem;
+        color: #64748b;
+        margin-bottom: 1.25rem;
+        line-height: 1.4;
+      }
+      .ai-radio-btn {
+        width: 20px; height: 20px;
+        border-radius: 50%;
+        border: 2px solid #cbd5e1;
+        position: relative;
+        transition: all 0.2s;
+      }
+      .ai-card-btn.selected .ai-radio-btn {
+        border-color: var(--green);
+      }
+      .ai-card-btn.selected .ai-radio-btn::after {
+        content: ''; position: absolute;
+        width: 10px; height: 10px;
+        background: var(--green);
+        border-radius: 50%;
+        top: 50%; left: 50%; transform: translate(-50%, -50%);
+      }
+      
+      @keyframes float-up-down {
+        0%, 100% { transform: translateY(0px); }
+        50% { transform: translateY(-10px); }
+      }
+      
+      .magic-spinner {
+        width: 60px; height: 60px;
+        border: 4px solid #e2e8f0;
+        border-top-color: var(--green);
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin: 0 auto;
+      }
       @keyframes spin { 100% { transform: rotate(360deg); } }
     `;
     document.head.appendChild(style);
   }
   
   window.aiAnswers = {};
+};
+
+window.selectAiOptionModern = (step, answer, budgetLimit = null) => {
+  const currentStepEl = document.getElementById(`ai-step-${step}`);
+  const buttons = currentStepEl.querySelectorAll('.ai-card-btn');
+  buttons.forEach(btn => btn.classList.remove('selected'));
+  event.currentTarget.classList.add('selected');
+  
+  if(step === 1) window.aiAnswers.companions = answer;
+  if(step === 2) window.aiAnswers.vibe = answer;
+  if(step === 3) {
+    window.aiAnswers.budgetLabel = answer;
+    window.aiAnswers.budgetLimit = budgetLimit;
+  }
+  
+  setTimeout(() => {
+    if(step === 3) {
+      submitAiWizard();
+      return;
+    }
+    
+    currentStepEl.style.animation = 'fadeOutDown 0.3s ease-in forwards';
+    setTimeout(() => {
+      currentStepEl.style.display = 'none';
+      currentStepEl.style.animation = '';
+      
+      const nextStepEl = document.getElementById(`ai-step-${step+1}`);
+      nextStepEl.style.display = 'block';
+    }, 300);
+  }, 400);
 };
 
 window.selectAiOption = (step, answer, budgetLimit = null) => {
@@ -1551,7 +1805,7 @@ window.submitAiWizard = async () => {
   document.getElementById('ai-step-loading').style.display = 'block';
   
   try {
-    const res = await fetch('http://localhost:3001/api/ai/package', {
+    const res = await fetch(`${window.API_BASE_URL || 'http://localhost:3001/api'}/ai/package`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(window.aiAnswers)

@@ -159,7 +159,7 @@ async function renderLocationDetail(locationId) {
     // Fetch Google Reviews asynchronously
     setTimeout(async () => {
       try {
-        const res = await fetch(`http://localhost:3001/api/locations/${locationId}/google-reviews`);
+        const res = await fetch(`${window.API_BASE_URL || 'http://localhost:3001/api'}/locations/${locationId}/google-reviews`);
         if (!res.ok) throw new Error('API error');
         const data = await res.json();
         

@@ -37,7 +37,7 @@ app.use('/api/packages', packageRoutes);
 app.use('/api/favorites', favoriteRoutes);
 
 // SPA catch-all: serve index.html for any non-API route
-app.get('*', (req, res) => {
+app.get(/(.*)/, (req, res) => {
   res.sendFile(path.join(__dirname, '..', 'client', 'index.html'));
 });
 

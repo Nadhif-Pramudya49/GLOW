@@ -73,7 +73,61 @@ window.renderAdminTab = async (tab, data = null) => {
           <h2 style="font-size:1.25rem;color:var(--gray-600);margin-bottom:0.5rem">Total Pendapatan</h2>
           <div style="font-size:3rem;font-weight:800;color:var(--gray-900)">Rp ${parseFloat(stats.revenue).toLocaleString('id-ID')}</div>
         </div>
+        <div style="display:grid; grid-template-columns: 2fr 1fr; gap: 2rem; margin-top: 2rem;">
+          <div class="dashboard-card" style="padding: 1.5rem">
+            <h3 style="font-weight:700; margin-bottom:1rem; color:var(--gray-800)">Pendapatan Platform Keseluruhan (${new Date().getFullYear()})</h3>
+            <div style="position: relative; height: 300px; width: 100%;">
+              <canvas id="adminMonthlyChart"></canvas>
+            </div>
+          </div>
+          <div class="dashboard-card" style="padding: 1.5rem">
+            <h3 style="font-weight:700; margin-bottom:1rem; color:var(--gray-800)">Distribusi Status Transaksi</h3>
+            <div style="position: relative; height: 300px; width: 100%;">
+              <canvas id="adminStatusChart"></canvas>
+            </div>
+          </div>
+        </div>
       `;
+
+      // Render Charts
+      setTimeout(() => {
+        const ctxMonthly = document.getElementById('adminMonthlyChart');
+        if (ctxMonthly && stats.monthlyRevenue) {
+          new Chart(ctxMonthly, {
+            type: 'line',
+            data: {
+              labels: ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Ags', 'Sep', 'Okt', 'Nov', 'Des'],
+              datasets: [{
+                label: 'Total Transaksi Platform (Rp)',
+                data: stats.monthlyRevenue,
+                borderColor: '#0f766e',
+                backgroundColor: 'rgba(15, 118, 110, 0.1)',
+                borderWidth: 2,
+                fill: true,
+                tension: 0.4
+              }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+          });
+        }
+
+        const ctxStatus = document.getElementById('adminStatusChart');
+        if (ctxStatus && stats.bookingsByStatus) {
+          const s = stats.bookingsByStatus;
+          new Chart(ctxStatus, {
+            type: 'pie',
+            data: {
+              labels: ['Selesai', 'Dikonfirmasi', 'Menunggu', 'Dibatalkan'],
+              datasets: [{
+                data: [s.COMPLETED, s.CONFIRMED, s.PENDING, s.CANCELLED],
+                backgroundColor: ['#10b981', '#3b82f6', '#fbbf24', '#ef4444'],
+                borderWidth: 0
+              }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+          });
+        }
+      }, 100);
     } catch(e) {
       document.getElementById('admin-stats-container').innerHTML = `<div style="color:red">Gagal memuat statistik.</div>`;
     }
@@ -193,7 +247,7 @@ window.renderAdminTab = async (tab, data = null) => {
 
     } catch(e) {
       console.error(e);
-      fetch('http://localhost:3001/api/log', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ error: e.message, stack: e.stack }) }).catch(()=>{});
+      fetch((window.API_BASE_URL || 'http://localhost:3001/api') + '/log', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ error: e.message, stack: e.stack }) }).catch(()=>{});
       document.getElementById('admin-owners-tbody').innerHTML = `<tr><td colspan="4" style="padding:2rem; text-align:center; color:red;">Gagal memuat pengguna: ${e.message}</td></tr>`;
       document.getElementById('admin-users-tbody').innerHTML = `<tr><td colspan="4" style="padding:2rem; text-align:center; color:red;">Gagal memuat pengguna.</td></tr>`;
     }
@@ -445,7 +499,7 @@ window.renderAdminTab = async (tab, data = null) => {
       cont.innerHTML = locations.map(l => `
         <div class="dashboard-card" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; opacity:${l.isPublished?1:0.6}">
           <div style="display:flex; gap:1.5rem; align-items:center;">
-            <img src="${(l.img && l.img.startsWith('/uploads/')) ? 'http://localhost:3001' + l.img : (l.img || 'https://via.placeholder.com/100')}" onerror="this.src='https://via.placeholder.com/100?text=No+Image'" style="width:100px; height:100px; object-fit:cover; border-radius:8px;" />
+            <img src="${(l.img && l.img.startsWith('/uploads/')) ? (window.API_BASE_URL ? window.API_BASE_URL.replace('/api','') : 'http://localhost:3001') + l.img : (l.img || 'https://via.placeholder.com/100')}" onerror="this.src='https://via.placeholder.com/100?text=No+Image'" style="width:100px; height:100px; object-fit:cover; border-radius:8px;" />
             <div>
               <h3 style="font-weight:700; margin-bottom:0.25rem;">${l.name}</h3>
               <div style="font-size:0.875rem; color:var(--gray-500); margin-bottom:0.25rem;">${l.category || 'Location'} • ${l.business?.user?.fullName || 'Unknown Owner'}</div>

@@ -154,18 +154,46 @@ exports.getOwnerStats = async (req, res) => {
             businessId: user.businessProfile.id
           }
         }
+      },
+      include: {
+        package: {
+          include: { location: true }
+        }
       }
     });
 
-    const totalBookings = bookings.length;
-    const totalRevenue = bookings.reduce((sum, b) => {
-      return b.status === 'COMPLETED' ? sum + Number(b.totalPrice) : sum;
-    }, 0);
+    let monthlyRevenue = new Array(12).fill(0);
+    let locationStats = {};
+    const currentYear = new Date().getFullYear();
+
+    let totalRevenue = 0;
+
+    bookings.forEach(b => {
+      const locName = b.package?.location?.name || 'Unknown';
+      if (!locationStats[locName]) {
+        locationStats[locName] = { name: locName, bookingsCount: 0, revenue: 0 };
+      }
+      
+      locationStats[locName].bookingsCount++;
+
+      if (b.status === 'COMPLETED' || b.status === 'CONFIRMED') {
+        const price = Number(b.totalPrice) || 0;
+        totalRevenue += price;
+        locationStats[locName].revenue += price;
+        
+        const d = new Date(b.startDate);
+        if (d.getFullYear() === currentYear) {
+          monthlyRevenue[d.getMonth()] += price;
+        }
+      }
+    });
 
     res.json({
       locations,
       totalBookings: bookings.length,
-      totalRevenue
+      totalRevenue,
+      monthlyRevenue,
+      locationStats: Object.values(locationStats).sort((a,b) => b.revenue - a.revenue)
     });
   } catch (error) {
     console.error(error);

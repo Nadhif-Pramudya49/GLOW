@@ -73,7 +73,7 @@ async function renderOwnerTab(tab) {
       } else {
         list.innerHTML = data.locations.map(loc => `
           <div class="dashboard-card" style="padding:1rem">
-            <img src="${loc.img ? 'http://localhost:3001' + loc.img : 'https://placehold.co/400x300'}" alt="${loc.name}" style="width:100%;height:150px;object-fit:cover;border-radius:8px;margin-bottom:1rem">
+            <img src="${loc.img ? (loc.img.startsWith('http') ? loc.img : '/' + loc.img) : 'https://placehold.co/400x300'}" alt="${loc.name}" style="width:100%;height:150px;object-fit:cover;border-radius:8px;margin-bottom:1rem">
             <h3 style="font-weight:700;margin-bottom:0.25rem;font-size:1.1rem">${loc.name}</h3>
             <p style="font-size:0.875rem;color:var(--text-sec);margin-bottom:0.5rem">${loc.category}</p>
             <div style="display:flex;gap:0.5rem;margin-top:1rem">
@@ -151,7 +151,63 @@ async function renderOwnerTab(tab) {
             <div style="font-size:1.5rem;font-weight:800;color:var(--gold)">Rp ${stats.totalRevenue.toLocaleString('id-ID')}</div>
           </div>
         </div>
+
+        <div style="display:grid; grid-template-columns: 2fr 1fr; gap: 2rem; margin-top: 2rem;">
+          <div class="dashboard-card" style="padding: 1.5rem">
+            <h3 style="font-weight:700; margin-bottom:1rem; color:var(--gray-800)">Pendapatan Bulanan (${new Date().getFullYear()})</h3>
+            <div style="position: relative; height: 300px; width: 100%;">
+              <canvas id="ownerMonthlyChart"></canvas>
+            </div>
+          </div>
+          <div class="dashboard-card" style="padding: 1.5rem">
+            <h3 style="font-weight:700; margin-bottom:1rem; color:var(--gray-800)">Performa Lokasi</h3>
+            <div style="position: relative; height: 300px; width: 100%;">
+              <canvas id="ownerLocationChart"></canvas>
+            </div>
+          </div>
+        </div>
       `;
+
+      // Render Charts
+      setTimeout(() => {
+        const ctxMonthly = document.getElementById('ownerMonthlyChart');
+        if (ctxMonthly) {
+          new Chart(ctxMonthly, {
+            type: 'line',
+            data: {
+              labels: ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Ags', 'Sep', 'Okt', 'Nov', 'Des'],
+              datasets: [{
+                label: 'Pendapatan (Rp)',
+                data: stats.monthlyRevenue,
+                borderColor: '#0f766e',
+                backgroundColor: 'rgba(15, 118, 110, 0.1)',
+                borderWidth: 2,
+                fill: true,
+                tension: 0.4
+              }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+          });
+        }
+
+        const ctxLocation = document.getElementById('ownerLocationChart');
+        if (ctxLocation && stats.locationStats) {
+          const labels = stats.locationStats.map(l => l.name);
+          const data = stats.locationStats.map(l => l.bookingsCount);
+          new Chart(ctxLocation, {
+            type: 'doughnut',
+            data: {
+              labels: labels,
+              datasets: [{
+                data: data,
+                backgroundColor: ['#0f766e', '#10b981', '#34d399', '#fbbf24', '#f59e0b', '#ef4444', '#8b5cf6'],
+                borderWidth: 0
+              }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+          });
+        }
+      }, 100);
     } catch (error) {
       document.getElementById('stats-content').innerHTML = `<div style="color:var(--red)">Gagal memuat statistik.</div>`;
     }
@@ -350,7 +406,7 @@ window.editLocation = async (id) => {
         <div style="margin-bottom:1rem">
           <label style="display:block;margin-bottom:0.5rem;font-weight:600">Ubah Foto (Kosongkan jika tidak ingin mengubah)</label>
           <input type="file" name="image" accept="image/*" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:4px">
-          ${loc.img ? `<img src="http://localhost:3001${loc.img}" style="height:60px;margin-top:0.5rem;border-radius:4px">` : ''}
+          ${loc.img ? `<img src="${loc.img.startsWith('http') ? loc.img : '/' + loc.img}" style="height:60px;margin-top:0.5rem;border-radius:4px">` : ''}
         </div>
         
         <div style="display:flex;gap:1rem;margin-top:2rem">

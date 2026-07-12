@@ -6,14 +6,14 @@
   <title>GLOW — Gunung Kidul Location for Work</title>
   <script>
     window.onerror = function(msg, url, line, col, error) {
-      fetch('http://localhost:3001/api/log', {
+      fetch((window.API_BASE_URL || 'http://localhost:3001/api') + '/log', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ error: msg, line: line, col: col, stack: error ? error.stack : '' })
       }).catch(e=>{});
     };
     window.addEventListener('unhandledrejection', function(event) {
-      fetch('http://localhost:3001/api/log', {
+      fetch((window.API_BASE_URL || 'http://localhost:3001/api') + '/log', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ error: 'Unhandled promise rejection', reason: event.reason })
