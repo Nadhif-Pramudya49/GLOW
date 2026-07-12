@@ -743,9 +743,9 @@ h1, h2, h3, h4, h5, h6 {
   .navbar-brand { font-size: 1.25rem; }
   .hamburger { display: flex; }
   .navbar-actions .btn { display: none; }
-  /* Room for bottom nav */
-  .page, body { padding-bottom: 70px; }
-  .bottom-nav { display: block; }
+  /* Hide bottom nav completely */
+  .page, body { padding-bottom: 0; }
+  .bottom-nav { display: none !important; }
 }
 
 /* Smooth animation keyframes for drawer */

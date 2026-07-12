@@ -3,12 +3,18 @@
 let _mobileMenuOpen = false;
 
 function renderNavbar() {
+  const svgSearch = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>`;
+  const svgPackage = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>`;
+  const svgBooking = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>`;
+  const svgKerja = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>`;
+  const svgReview = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>`;
+
   const pages = [
-    { id:'search',       label:'Cari Tempat',     icon:'' },
-    { id:'package',      label:'Package Builder', icon:'' },
-    { id:'booking',      label:'Booking',         icon:'' },
-    { id:'productivity', label:'Productivity',    icon:'' },
-    { id:'review',       label:'Review',          icon:'' },
+    { id:'search',       label:'Cari Tempat',     icon: svgSearch },
+    { id:'package',      label:'Package Builder', icon: svgPackage },
+    { id:'booking',      label:'Booking',         icon: svgBooking },
+    { id:'productivity', label:'Productivity',    icon: svgKerja },
+    { id:'review',       label:'Review',          icon: svgReview },
   ];
 
   const nav = el('nav', 'navbar');
@@ -63,7 +69,8 @@ function renderNavbar() {
     <!-- Nav links -->
     <nav class="drawer-nav">
       ${pages.map(p => `
-        <button class="drawer-link ${State.currentPage===p.id?'active':''}" onclick="navigate('${p.id}');toggleMobileMenu()" aria-label="${p.label}">
+        <button class="drawer-link ${State.currentPage===p.id?'active':''}" onclick="navigate('${p.id}');toggleMobileMenu()" aria-label="${p.label}" style="display:flex;align-items:center;">
+          <span style="display:flex;align-items:center;justify-content:center;margin-right:12px;opacity:0.8;color:inherit">${p.icon}</span>
           <span>${p.label}</span>
         </button>
       `).join('')}
