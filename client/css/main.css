@@ -1163,5 +1163,6 @@ body.zen-mode .card select option {
     border-radius: 20px 20px 0 0; 
     margin-top: 0 !important;
   }
-  .page { padding-bottom: 6rem !important; }
+  /* Hide Tagline on Mobile */
+  .navbar-brand-tagline { display: none; }
 }
