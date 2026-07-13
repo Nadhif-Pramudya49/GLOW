@@ -277,7 +277,7 @@ window.renderAdminTab = async (tab, data = null) => {
       const localMockStr = localStorage.getItem('glow_mock_bookings');
       if (localMockStr) {
         let localMocks = JSON.parse(localMockStr);
-        let userMocks = localMocks.filter(m => m.userId === user.id || !m.userId);
+        let userMocks = localMocks.filter(m => String(m.userId) === String(user.id) || !m.userId);
         if (!user.bookings) user.bookings = [];
         user.bookings = user.bookings.concat(userMocks);
       }
