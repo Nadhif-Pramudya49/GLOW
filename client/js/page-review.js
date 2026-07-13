@@ -152,12 +152,19 @@ function renderReviewForm() {
 
       if (Array.isArray(items) && items.length > 0) {
         items.forEach((item, index) => {
+          let typeLabel = 'Aktivitas';
+          if (item.type === 'accommodation') typeLabel = 'Penginapan';
+          else if (item.type === 'workspace') typeLabel = 'Workspace / Cafe';
+          else if (item.type === 'transport') typeLabel = 'Transportasi';
+          
           dynamicCategories.push({
             key: `item_${index}`,
-            label: `${item.type === 'accommodation' ? 'Penginapan' : item.type === 'workspace' ? 'Workspace' : item.type === 'transport' ? 'Transportasi' : 'Aktivitas'}: ${item.name || item.brand || item.title || 'Item'}`,
+            label: `${typeLabel}: ${item.name || item.brand || item.title || 'Item'}`,
+            typeLabel: typeLabel,
             itemId: item.id || `idx_${index}`,
             itemName: item.name || item.brand || item.title || 'Item',
-            itemType: item.type
+            itemType: item.type,
+            img: item.img || item.image_url || item.photo || ''
           });
         });
       }
@@ -179,31 +186,24 @@ function renderReviewForm() {
     </div>
 
     <div style="margin-bottom:1.5rem">
-      <div style="display:flex; justify-content:space-between; align-items:center;">
-        <div>
-          <label class="form-label" style="margin-bottom:4px;">Rating Keseluruhan</label>
-          <div class="star-input" id="overall-stars" style="font-size:1.75rem; justify-content:flex-end;">
-            ${[5,4,3,2,1].map(n=>`<span class="${n<=reviewState.overallRating?'active':''}" onclick="setOverallRating(${n})">★</span>`).join('')}
-          </div>
-        </div>
-        <div style="font-weight:800; font-size:1.5rem; color:var(--green)">
-          ${reviewState.overallRating}<span style="font-size:1rem;color:var(--gray-400)">/5</span>
-        </div>
-      </div>
-    </div>
-
-    <div style="margin-bottom:1.5rem">
-      <label class="form-label" style="border-bottom:1px solid var(--gray-200); padding-bottom:8px; display:block; margin-bottom:12px;">Rating per Item / Kategori</label>
+      <label class="form-label" style="border-bottom:1px solid var(--gray-200); padding-bottom:8px; display:block; margin-bottom:12px;">Beri Rating pada Tempat / Layanan Berikut:</label>
       ${dynamicCategories.map(cat=>`
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
-          <div>
-            <div style="font-weight:600; font-size:0.9rem; margin-bottom:4px; color:var(--gray-800);">${cat.label}</div>
-            <div class="star-input" style="font-size:1.5rem; justify-content:flex-end;">
-              ${[5,4,3,2,1].map(n=>`<span class="${n<=(reviewState.ratings[cat.key]||0)?'active':''}" onclick="reviewState.ratings['${cat.key}']=${n};reviewState.dynamicCats = ${JSON.stringify(dynamicCategories).replace(/"/g, '&quot;')};renderApp()">★</span>`).join('')}
+        <div style="margin-bottom:1.5rem; padding:1.25rem; border:1px solid var(--gray-200); border-radius:12px; background:var(--white); box-shadow:0 2px 8px rgba(0,0,0,0.02);">
+          <div style="display:flex; gap:1rem; align-items:flex-start;">
+            ${cat.img ? `<img src="${cat.img}" style="width:80px; height:80px; object-fit:cover; border-radius:8px; flex-shrink:0; border:1px solid var(--gray-100);" onerror="this.src='https://picsum.photos/seed/${cat.itemId}/400/300'"/>` : `<div style="width:80px; height:80px; background:var(--gray-100); border-radius:8px; display:flex; align-items:center; justify-content:center; flex-shrink:0; color:var(--gray-400); border:1px solid var(--gray-200);"><svg width="32" height="32" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg></div>`}
+            <div style="flex:1;">
+              <div style="font-size:0.75rem; font-weight:700; color:var(--green); margin-bottom:4px; text-transform:uppercase; letter-spacing:0.05em;">${cat.typeLabel}</div>
+              <div style="font-weight:700; font-size:1.1rem; color:var(--gray-900); margin-bottom:0.5rem; line-height:1.2;">${cat.itemName}</div>
+              
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-top:0.75rem;">
+                <div class="star-input" style="font-size:2rem; justify-content:flex-end; gap:8px;">
+                  ${[5,4,3,2,1].map(n=>`<span class="${n<=(reviewState.ratings[cat.key]||0)?'active':''}" onclick="reviewState.ratings['${cat.key}']=${n};reviewState.dynamicCats = ${JSON.stringify(dynamicCategories).replace(/"/g, '&quot;')};renderApp()" style="text-shadow:0 2px 4px rgba(0,0,0,0.05);">★</span>`).join('')}
+                </div>
+                <div style="font-weight:800; font-size:1.75rem; color:var(--green)">
+                  ${reviewState.ratings[cat.key]||0}<span style="font-size:1rem;color:var(--gray-400);font-weight:500;">/5</span>
+                </div>
+              </div>
             </div>
-          </div>
-          <div style="font-weight:800; font-size:1.25rem; color:var(--green)">
-            ${reviewState.ratings[cat.key]||0}<span style="font-size:0.875rem;color:var(--gray-400)">/5</span>
           </div>
         </div>
       `).join('')}
@@ -375,7 +375,17 @@ function handlePhotoUpload(input) {
 }
 
 function previewReview() {
-  if (!reviewState.overallRating) { showToast('⚠️ Berikan rating keseluruhan dulu!'); return; }
+  // Calculate overall rating from items
+  let sum = 0; let count = 0;
+  if (reviewState.dynamicCats) {
+    reviewState.dynamicCats.forEach(cat => {
+      if (reviewState.ratings[cat.key]) { sum += reviewState.ratings[cat.key]; count++; }
+    });
+  }
+  reviewState.overallRating = count > 0 ? Math.round(sum / count) : 0;
+  
+  if (count === 0 || !reviewState.overallRating) { showToast('⚠️ Berikan minimal satu rating pada item!'); return; }
+
   const card = {
     name: 'Kamu',
     avatar: 'KM',
@@ -395,8 +405,16 @@ function previewReview() {
 }
 
 async function submitReview() {
-  if (!reviewState.selectedBookingId) { showToast('⚠️ Pilih booking terlebih dahulu!'); return; }
-  if (!reviewState.overallRating) { showToast('⚠️ Berikan rating keseluruhan dulu!'); return; }
+  // Calculate overall rating from items
+  let sum = 0; let count = 0;
+  if (reviewState.dynamicCats) {
+    reviewState.dynamicCats.forEach(cat => {
+      if (reviewState.ratings[cat.key]) { sum += reviewState.ratings[cat.key]; count++; }
+    });
+  }
+  reviewState.overallRating = count > 0 ? Math.round(sum / count) : 0;
+
+  if (count === 0 || !reviewState.overallRating) { showToast('⚠️ Berikan minimal satu rating pada item!'); return; }
   
   // Collect dynamic ratings if any
   const itemRatings = [];
