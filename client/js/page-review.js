@@ -16,15 +16,16 @@ const REVIEW_TAGS = ['Recommended','Bakal Balik Lagi','Untuk Solo','Untuk Tim','
 
 function renderReviewPage() {
   let isLoading = false;
+  if (!reviewState.activeTab) reviewState.activeTab = 'global';
 
   if (reviewState.myBookings === null) {
     isLoading = true;
     
     // Get mock bookings from localStorage (used in demo/testing checkout)
     const localMockStr = localStorage.getItem('glow_mock_bookings');
-    let localMocks = [];
+    let localMocksAll = [];
     if (localMockStr) {
-      localMocks = JSON.parse(localMockStr).filter(b => !b.review);
+      localMocksAll = JSON.parse(localMockStr);
     }
     
     if (window.BookingService) {
@@ -33,17 +34,20 @@ function renderReviewPage() {
         if (Array.isArray(res)) bookings = res;
         else if (res && Array.isArray(res.data)) bookings = res.data;
         
-        bookings = bookings.concat(localMocks);
+        bookings = bookings.concat(localMocksAll);
         
         // Allow reviewing any booking that hasn't been reviewed yet
         reviewState.myBookings = bookings.filter(b => !b.review);
+        reviewState.myReviewedBookings = bookings.filter(b => b.review);
         renderApp();
       }).catch(() => { 
-        reviewState.myBookings = localMocks; 
+        reviewState.myBookings = localMocksAll.filter(b => !b.review); 
+        reviewState.myReviewedBookings = localMocksAll.filter(b => b.review);
         renderApp(); 
       });
     } else {
-      reviewState.myBookings = localMocks;
+      reviewState.myBookings = localMocksAll.filter(b => !b.review);
+      reviewState.myReviewedBookings = localMocksAll.filter(b => b.review);
     }
   }
 
@@ -267,69 +271,128 @@ function renderSubmittedPreview() {
 
 function renderExistingReviews() {
   const wrap = el('div', '');
-  const reviewsData = reviewState.recentReviews || [];
 
-  // Hitung rata-rata nyata
-  let avgOverall = 0, avgWifi = 0, avgKenyamanan = 0, avgFasilitas = 0, avgSuasana = 0, avgValue = 0;
-  if (reviewsData.length > 0) {
-    avgOverall = (reviewsData.reduce((acc, r) => acc + r.rating, 0) / reviewsData.length).toFixed(1);
-    avgWifi = (reviewsData.reduce((acc, r) => acc + (r.wifiRating||r.rating), 0) / reviewsData.length).toFixed(1);
-    avgKenyamanan = (reviewsData.reduce((acc, r) => acc + (r.workspaceRating||r.rating), 0) / reviewsData.length).toFixed(1);
-    avgFasilitas = avgOverall; // Fallback jika tidak ada spesifik
-    avgSuasana = (reviewsData.reduce((acc, r) => acc + (r.ambienceRating||r.rating), 0) / reviewsData.length).toFixed(1);
-    avgValue = avgOverall; // Fallback
-  }
+  // Add tabs
+  const tabsWrap = el('div', 'mb-4');
+  tabsWrap.style.display = 'flex';
+  tabsWrap.style.gap = '1.5rem';
+  tabsWrap.style.borderBottom = '1px solid var(--gray-200)';
+  tabsWrap.style.marginBottom = '2rem';
 
-  // Aggregated stats
-  const statsCard = el('div', 'card mb-4');
-  statsCard.style.padding = '1.5rem';
-  statsCard.innerHTML = `
-    <h3 style="font-weight:800;font-size:1rem;color:var(--green-dark);margin-bottom:1.25rem"><svg style="width:20px;height:20px;display:inline-block;vertical-align:bottom;margin-right:6px;color:var(--green);" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg> Statistik Ulasan (Global)</h3>
-    <div style="text-align:center;margin-bottom:1rem">
-      <div style="font-size:3rem;font-weight:900;color:var(--green)">${avgOverall}</div>
-      <div class="stars" style="font-size:1.5rem">${'★'.repeat(Math.round(avgOverall))}</div>
-      <div style="font-size:0.8rem;color:var(--gray-400)">dari ${reviewsData.length} ulasan</div>
-    </div>
-    ${['WiFi','Kenyamanan','Fasilitas','Suasana','Value'].map((cat,i)=>{
-      const score = [avgWifi, avgKenyamanan, avgFasilitas, avgSuasana, avgValue][i];
-      return `
-        <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:0.625rem;font-size:0.8rem">
-          <span style="width:80px;flex-shrink:0">${cat}</span>
-          <div class="progress-bar" style="flex:1;height:6px"><div class="progress-fill" style="width:${(score/5)*100}%"></div></div>
-          <span style="font-weight:700;width:28px">${score}</span>
-        </div>
-      `;
-    }).join('')}
-  `;
-  wrap.appendChild(statsCard);
+  const tabGlobal = el('div', 'fw-700 cursor-pointer');
+  tabGlobal.style.padding = '0.5rem 0.5rem 0.75rem';
+  tabGlobal.style.borderBottom = reviewState.activeTab === 'global' ? '2px solid var(--green)' : '2px solid transparent';
+  tabGlobal.style.color = reviewState.activeTab === 'global' ? 'var(--green)' : 'var(--gray-500)';
+  tabGlobal.textContent = 'Ulasan Global';
+  tabGlobal.onclick = () => { reviewState.activeTab = 'global'; renderApp(); };
 
-  const reviews = el('div', '');
-  const title = el('div', 'fw-700 mb-3');
-  title.style.color = 'var(--gray-700)';
-  title.innerHTML = '<svg style="width:18px;height:18px;display:inline-block;vertical-align:bottom;margin-right:6px;color:var(--green);" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg> Ulasan Pengguna Terbaru';
-  wrap.appendChild(title);
+  const tabHistory = el('div', 'fw-700 cursor-pointer');
+  tabHistory.style.padding = '0.5rem 0.5rem 0.75rem';
+  tabHistory.style.borderBottom = reviewState.activeTab === 'history' ? '2px solid var(--green)' : '2px solid transparent';
+  tabHistory.style.color = reviewState.activeTab === 'history' ? 'var(--green)' : 'var(--gray-500)';
+  tabHistory.textContent = 'Riwayat Ulasanku';
+  tabHistory.onclick = () => { reviewState.activeTab = 'history'; renderApp(); };
 
-  if (reviewsData.length === 0) {
-    const empty = el('div', 'text-center p-4');
-    empty.style.color = 'var(--gray-500)';
-    empty.textContent = 'Belum ada ulasan.';
-    wrap.appendChild(empty);
+  tabsWrap.appendChild(tabGlobal);
+  tabsWrap.appendChild(tabHistory);
+  wrap.appendChild(tabsWrap);
+
+  if (reviewState.activeTab === 'global') {
+    const reviewsData = reviewState.recentReviews || [];
+
+    // Hitung rata-rata nyata
+    let avgOverall = 0, avgWifi = 0, avgKenyamanan = 0, avgFasilitas = 0, avgSuasana = 0, avgValue = 0;
+    if (reviewsData.length > 0) {
+      avgOverall = (reviewsData.reduce((acc, r) => acc + r.rating, 0) / reviewsData.length).toFixed(1);
+      avgWifi = (reviewsData.reduce((acc, r) => acc + (r.wifiRating||r.rating), 0) / reviewsData.length).toFixed(1);
+      avgKenyamanan = (reviewsData.reduce((acc, r) => acc + (r.workspaceRating||r.rating), 0) / reviewsData.length).toFixed(1);
+      avgFasilitas = avgOverall; // Fallback jika tidak ada spesifik
+      avgSuasana = (reviewsData.reduce((acc, r) => acc + (r.ambienceRating||r.rating), 0) / reviewsData.length).toFixed(1);
+      avgValue = avgOverall; // Fallback
+    }
+
+    // Aggregated stats
+    const statsCard = el('div', 'card mb-4');
+    statsCard.style.padding = '1.5rem';
+    statsCard.innerHTML = `
+      <h3 style="font-weight:800;font-size:1rem;color:var(--green-dark);margin-bottom:1.25rem"><svg style="width:20px;height:20px;display:inline-block;vertical-align:bottom;margin-right:6px;color:var(--green);" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg> Statistik Ulasan (Global)</h3>
+      <div style="text-align:center;margin-bottom:1rem">
+        <div style="font-size:3rem;font-weight:900;color:var(--green)">${avgOverall}</div>
+        <div class="stars" style="font-size:1.5rem">${'★'.repeat(Math.round(avgOverall))}</div>
+        <div style="font-size:0.8rem;color:var(--gray-400)">dari ${reviewsData.length} ulasan</div>
+      </div>
+      ${['WiFi','Kenyamanan','Fasilitas','Suasana','Value'].map((cat,i)=>{
+        const score = [avgWifi, avgKenyamanan, avgFasilitas, avgSuasana, avgValue][i];
+        return `
+          <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:0.625rem;font-size:0.8rem">
+            <span style="width:80px;flex-shrink:0">${cat}</span>
+            <div class="progress-bar" style="flex:1;height:6px"><div class="progress-fill" style="width:${(score/5)*100}%"></div></div>
+            <span style="font-weight:700;width:28px">${score}</span>
+          </div>
+        `;
+      }).join('')}
+    `;
+    wrap.appendChild(statsCard);
+
+    const reviews = el('div', '');
+    const title = el('div', 'fw-700 mb-3');
+    title.style.color = 'var(--gray-700)';
+    title.innerHTML = '<svg style="width:18px;height:18px;display:inline-block;vertical-align:bottom;margin-right:6px;color:var(--green);" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg> Ulasan Pengguna Terbaru';
+    wrap.appendChild(title);
+
+    if (reviewsData.length === 0) {
+      const empty = el('div', 'text-center p-4');
+      empty.style.color = 'var(--gray-500)';
+      empty.textContent = 'Belum ada ulasan.';
+      wrap.appendChild(empty);
+    } else {
+      reviewsData.forEach(r => {
+        // Map format dari backend ke format UI
+        const colors = ['#dc2626','#7c3aed','#059669','#ea580c','#2563eb'];
+        const cardData = {
+          name: r.userName || 'Pengguna',
+          avatar: (r.userName||'P').substring(0,2).toUpperCase(),
+          color: colors[r.id % colors.length],
+          rating: r.rating,
+          date: new Date(r.createdAt).toLocaleDateString('id-ID', {day:'numeric', month:'short', year:'numeric'}),
+          text: r.comment || '-',
+          tags: r.tags || [],
+          locationName: r.locationName
+        };
+        wrap.appendChild(renderReviewCard(cardData, false));
+      });
+    }
   } else {
-    reviewsData.forEach(r => {
-      // Map format dari backend ke format UI
-      const colors = ['#dc2626','#7c3aed','#059669','#ea580c','#2563eb'];
-      const cardData = {
-        name: r.userName || 'Pengguna',
-        avatar: (r.userName||'P').substring(0,2).toUpperCase(),
-        color: colors[r.id % colors.length],
-        rating: r.rating,
-        date: new Date(r.createdAt).toLocaleDateString('id-ID', {day:'numeric', month:'short', year:'numeric'}),
-        text: r.comment || '-',
-        tags: r.tags || [],
-        locationName: r.locationName
-      };
-      wrap.appendChild(renderReviewCard(cardData, false));
-    });
+    // Tab: Riwayat Ulasanku
+    const myHistory = reviewState.myReviewedBookings || [];
+    
+    if (!State.user) {
+      const empty = el('div', 'text-center p-4');
+      empty.style.color = 'var(--gray-500)';
+      empty.textContent = 'Silakan login untuk melihat riwayat ulasan Anda.';
+      wrap.appendChild(empty);
+    } else if (myHistory.length === 0) {
+      const empty = el('div', 'text-center p-4');
+      empty.style.color = 'var(--gray-500)';
+      empty.textContent = 'Anda belum memberikan ulasan apa pun.';
+      wrap.appendChild(empty);
+    } else {
+      myHistory.forEach((b, i) => {
+        let rev = b.review;
+        const colors = ['#dc2626','#7c3aed','#059669','#ea580c','#2563eb'];
+        const cardData = {
+          name: State.user.fullName || 'Kamu',
+          avatar: (State.user.fullName||'KM').substring(0,2).toUpperCase(),
+          color: colors[i % colors.length] || '#1a4a3a',
+          rating: rev.rating || rev.overallRating || 5,
+          date: new Date(rev.createdAt || b.createdAt).toLocaleDateString('id-ID', {day:'numeric', month:'short', year:'numeric'}),
+          text: rev.comment || rev.reviewText || '-',
+          tags: rev.tags || [],
+          locationName: b.package?.packageName || b.package?.location?.name || 'Paket Workation'
+        };
+        wrap.appendChild(renderReviewCard(cardData, true));
+      });
+    }
   }
 
   return wrap;
