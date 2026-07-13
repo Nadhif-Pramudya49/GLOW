@@ -18,6 +18,16 @@ class ReviewService {
       return [];
     }
   }
+
+  static async getRecentReviews() {
+    try {
+      const response = await ApiService.get('/reviews/recent');
+      return response;
+    } catch (error) {
+      console.error('Get recent reviews error:', error);
+      return [];
+    }
+  }
 }
 
 window.ReviewService = ReviewService;

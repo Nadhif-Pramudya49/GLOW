@@ -3,6 +3,9 @@ const router = express.Router();
 const reviewController = require('../controllers/review.controller');
 const authMiddleware = require('../middlewares/auth');
 
+// GET: Ambil ulasan terbaru
+router.get('/recent', reviewController.getRecentReviews);
+
 // POST: Buat ulasan baru (Harus login)
 router.post('/', authMiddleware.verifyToken, reviewController.createReview);
 

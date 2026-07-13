@@ -9,6 +9,7 @@ let reviewState = {
   tags: [],
   submitted: false,
   previewCard: null,
+  recentReviews: null, // null means not loaded yet
 };
 
 const REVIEW_TAGS = ['Recommended','Bakal Balik Lagi','Untuk Solo','Untuk Tim','Budget-Friendly','Premium'];
@@ -21,6 +22,18 @@ function renderReviewPage() {
         if (Array.isArray(res)) {
           // Filter only completed bookings for review
           reviewState.myBookings = res.filter(b => b.status === 'COMPLETED' || new Date(b.endDate) < new Date());
+        }
+        renderApp();
+      });
+    }
+  }
+
+  if (reviewState.recentReviews === null) {
+    reviewState.recentReviews = [];
+    if (window.ReviewService && window.ReviewService.getRecentReviews) {
+      ReviewService.getRecentReviews().then(res => {
+        if (Array.isArray(res)) {
+          reviewState.recentReviews = res;
         }
         renderApp();
       });
@@ -112,11 +125,11 @@ function renderReviewForm() {
         <div style="margin-bottom:0.875rem">
           <div style="display:flex;justify-content:space-between;margin-bottom:4px;font-size:0.875rem">
             <span style="font-weight:500">${cat.label}</span>
-            <span style="font-weight:700;color:var(--green)">${reviewState.ratings[cat.key]||'-'}</span>
+            <span style="font-weight:700;color:var(--green)">${reviewState.ratings[cat.key]||0}/5</span>
           </div>
-          <input type="range" class="range-slider" min="1" max="5" step="0.5" value="${reviewState.ratings[cat.key]||3}"
-            oninput="reviewState.ratings['${cat.key}']=+this.value;document.getElementById('rv-${cat.key}').textContent=this.value" />
-          <div style="display:flex;justify-content:space-between;font-size:0.7rem;color:var(--gray-400)"><span>Buruk</span><span>Excellent</span></div>
+          <div class="star-input" style="font-size:1.5rem; gap:4px">
+            ${[1,2,3,4,5].map(n=>`<span class="${n<=(reviewState.ratings[cat.key]||0)?'active':''}" onclick="reviewState.ratings['${cat.key}']=${n};renderApp()">★</span>`).join('')}
+          </div>
         </div>
       `).join('')}
     </div>
@@ -172,23 +185,35 @@ function renderSubmittedPreview() {
 
 function renderExistingReviews() {
   const wrap = el('div', '');
+  const reviewsData = reviewState.recentReviews || [];
+
+  // Hitung rata-rata nyata
+  let avgOverall = 0, avgWifi = 0, avgKenyamanan = 0, avgFasilitas = 0, avgSuasana = 0, avgValue = 0;
+  if (reviewsData.length > 0) {
+    avgOverall = (reviewsData.reduce((acc, r) => acc + r.rating, 0) / reviewsData.length).toFixed(1);
+    avgWifi = (reviewsData.reduce((acc, r) => acc + (r.wifiRating||r.rating), 0) / reviewsData.length).toFixed(1);
+    avgKenyamanan = (reviewsData.reduce((acc, r) => acc + (r.workspaceRating||r.rating), 0) / reviewsData.length).toFixed(1);
+    avgFasilitas = avgOverall; // Fallback jika tidak ada spesifik
+    avgSuasana = (reviewsData.reduce((acc, r) => acc + (r.ambienceRating||r.rating), 0) / reviewsData.length).toFixed(1);
+    avgValue = avgOverall; // Fallback
+  }
 
   // Aggregated stats
   const statsCard = el('div', 'card mb-4');
   statsCard.style.padding = '1.5rem';
   statsCard.innerHTML = `
-    <h3 style="font-weight:800;font-size:1rem;color:var(--green-dark);margin-bottom:1.25rem"><svg style="width:20px;height:20px;display:inline-block;vertical-align:bottom;margin-right:6px;color:var(--green);" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg> Statistik Ulasan</h3>
+    <h3 style="font-weight:800;font-size:1rem;color:var(--green-dark);margin-bottom:1.25rem"><svg style="width:20px;height:20px;display:inline-block;vertical-align:bottom;margin-right:6px;color:var(--green);" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg> Statistik Ulasan (Global)</h3>
     <div style="text-align:center;margin-bottom:1rem">
-      <div style="font-size:3rem;font-weight:900;color:var(--green)">4.7</div>
-      <div class="stars" style="font-size:1.5rem">⭐⭐⭐⭐⭐</div>
-      <div style="font-size:0.8rem;color:var(--gray-400)">dari 124 ulasan</div>
+      <div style="font-size:3rem;font-weight:900;color:var(--green)">${avgOverall}</div>
+      <div class="stars" style="font-size:1.5rem">${'★'.repeat(Math.round(avgOverall))}</div>
+      <div style="font-size:0.8rem;color:var(--gray-400)">dari ${reviewsData.length} ulasan</div>
     </div>
     ${['WiFi','Kenyamanan','Fasilitas','Suasana','Value'].map((cat,i)=>{
-      const score = [4.8,4.6,4.5,4.9,4.5][i];
+      const score = [avgWifi, avgKenyamanan, avgFasilitas, avgSuasana, avgValue][i];
       return `
         <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:0.625rem;font-size:0.8rem">
           <span style="width:80px;flex-shrink:0">${cat}</span>
-          <div class="progress-bar" style="flex:1;height:6px"><div class="progress-fill" style="width:${score/5*100}%"></div></div>
+          <div class="progress-bar" style="flex:1;height:6px"><div class="progress-fill" style="width:${(score/5)*100}%"></div></div>
           <span style="font-weight:700;width:28px">${score}</span>
         </div>
       `;
@@ -199,15 +224,32 @@ function renderExistingReviews() {
   const reviews = el('div', '');
   const title = el('div', 'fw-700 mb-3');
   title.style.color = 'var(--gray-700)';
-  title.innerHTML = '<svg style="width:18px;height:18px;display:inline-block;vertical-align:bottom;margin-right:6px;color:var(--green);" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg> Ulasan Pengguna';
+  title.innerHTML = '<svg style="width:18px;height:18px;display:inline-block;vertical-align:bottom;margin-right:6px;color:var(--green);" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg> Ulasan Pengguna Terbaru';
   wrap.appendChild(title);
 
-  const extendedReviews = [
-    { name:'Sinta Dewi', avatar:'SD', color:'#dc2626', rating:5, date:'2 Jan 2025', text:'Workation terbaik yang pernah saya lakukan! Pantai + WiFi kencang = surga remote work.' },
-    { name:'Budi Santoso', avatar:'BS', color:'#7c3aed', rating:4, date:'20 Des 2024', text:'Suasana tenang, bikin fokus. Sate klathaknya juga enak banget!' },
-  ];
+  if (reviewsData.length === 0) {
+    const empty = el('div', 'text-center p-4');
+    empty.style.color = 'var(--gray-500)';
+    empty.textContent = 'Belum ada ulasan.';
+    wrap.appendChild(empty);
+  } else {
+    reviewsData.forEach(r => {
+      // Map format dari backend ke format UI
+      const colors = ['#dc2626','#7c3aed','#059669','#ea580c','#2563eb'];
+      const cardData = {
+        name: r.userName || 'Pengguna',
+        avatar: (r.userName||'P').substring(0,2).toUpperCase(),
+        color: colors[r.id % colors.length],
+        rating: r.rating,
+        date: new Date(r.createdAt).toLocaleDateString('id-ID', {day:'numeric', month:'short', year:'numeric'}),
+        text: r.comment || '-',
+        tags: r.tags || [],
+        locationName: r.locationName
+      };
+      wrap.appendChild(renderReviewCard(cardData, false));
+    });
+  }
 
-  extendedReviews.forEach(r => wrap.appendChild(renderReviewCard(r, false)));
   return wrap;
 }
 
@@ -223,7 +265,7 @@ function renderReviewCard(r, isOwn) {
           ${isOwn?'<span style="font-size:0.7rem;background:var(--green);color:#fff;padding:2px 8px;border-radius:100px">Anda</span>':''}
           <span style="font-size:0.7rem;background:#d1fae5;color:#065f46;padding:2px 8px;border-radius:100px">Verified Stay</span>
         </div>
-        <div style="font-size:0.75rem;color:var(--gray-400)">${r.date}</div>
+        <div style="font-size:0.75rem;color:var(--gray-400)">${r.date} ${r.locationName ? `di <b>${r.locationName}</b>` : ''}</div>
       </div>
       <div class="stars">${'★'.repeat(r.rating)}</div>
     </div>
@@ -287,7 +329,8 @@ async function submitReview() {
     wifiRating: reviewState.ratings.wifi || reviewState.overallRating,
     workspaceRating: reviewState.ratings.kenyamanan || reviewState.overallRating,
     ambienceRating: reviewState.ratings.suasana || reviewState.overallRating,
-    comment: reviewState.reviewText
+    comment: reviewState.reviewText,
+    tags: reviewState.tags
   };
 
   try {

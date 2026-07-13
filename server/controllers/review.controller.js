@@ -43,7 +43,9 @@ exports.createReview = async (req, res) => {
         wifiRating: parseInt(wifiRating || rating),
         workspaceRating: parseInt(workspaceRating || rating),
         ambienceRating: parseInt(ambienceRating || rating),
-        comment: comment || ''
+        comment: comment || '',
+        tags: req.body.tags || [],
+        photos: req.body.photos || []
       }
     });
 
@@ -80,6 +82,57 @@ exports.createReview = async (req, res) => {
   }
 };
 
+exports.getRecentReviews = async (req, res) => {
+  try {
+    const reviews = await prisma.review.findMany({
+      take: 20,
+      orderBy: {
+        createdAt: 'desc'
+      },
+      include: {
+        booking: {
+          include: {
+            user: {
+              select: {
+                fullName: true
+              }
+            },
+            package: {
+              include: {
+                location: {
+                  select: {
+                    name: true
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    });
+
+    const formattedReviews = reviews.map(r => ({
+      id: r.id,
+      rating: r.rating,
+      wifiRating: r.wifiRating,
+      workspaceRating: r.workspaceRating,
+      ambienceRating: r.ambienceRating,
+      comment: r.comment,
+      tags: r.tags || [],
+      photos: r.photos || [],
+      createdAt: r.createdAt,
+      userName: r.booking.user.fullName,
+      locationName: r.booking.package.location.name,
+      locationId: r.booking.package.locationId
+    }));
+
+    res.json(formattedReviews);
+  } catch (error) {
+    console.error('Error fetching recent reviews:', error);
+    res.status(500).json({ error: 'Terjadi kesalahan pada server saat mengambil ulasan terbaru.' });
+  }
+};
+
 exports.getReviewsByLocation = async (req, res) => {
   try {
     const { locationId } = req.params;
@@ -99,6 +152,15 @@ exports.getReviewsByLocation = async (req, res) => {
               select: {
                 fullName: true
               }
+            },
+            package: {
+              include: {
+                location: {
+                  select: {
+                    name: true
+                  }
+                }
+              }
             }
           }
         }
@@ -116,8 +178,11 @@ exports.getReviewsByLocation = async (req, res) => {
       workspaceRating: r.workspaceRating,
       ambienceRating: r.ambienceRating,
       comment: r.comment,
+      tags: r.tags || [],
+      photos: r.photos || [],
       createdAt: r.createdAt,
-      userName: r.booking.user.fullName
+      userName: r.booking.user.fullName,
+      locationName: r.booking.package.location.name
     }));
 
     res.json(formattedReviews);
