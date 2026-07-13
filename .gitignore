@@ -10,3 +10,7 @@ server/uploads/*
 !server/uploads/.gitkeep
 temp-puppeteer*/
 temp_api.json
+
+# Test Reports
+playwright-report/
+test-results/

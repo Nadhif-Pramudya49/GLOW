@@ -4,7 +4,14 @@
   "scripts": {
     "start": "node server/server.js",
     "build": "npx prisma generate",
-    "seed": "node prisma/seed.js"
+    "seed": "node prisma/seed.js",
+    "test": "playwright test",
+    "test:ui": "playwright test --ui",
+    "test:headed": "playwright test --headed",
+    "test:report": "playwright show-report",
+    "unit": "jest --silent",
+    "unit:watch": "jest --watch --silent",
+    "unit:coverage": "jest --coverage"
   },
   "prisma": {
     "seed": "node prisma/seed.js"
@@ -21,5 +28,10 @@
     "multer": "^2.2.0",
     "prisma": "^6.19.3",
     "puppeteer": "^25.3.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.61.1",
+    "babel-jest": "^30.4.1",
+    "jest": "^30.4.2"
   }
 }
