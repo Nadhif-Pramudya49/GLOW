@@ -184,6 +184,7 @@ Proyek ini dikembangkan untuk mata kuliah **Pengembangan Sistem Informasi (PSI)*
 | Nadhif Pramudya | — | Developer |
 | Anjalin Aida Faza | — | Tester |
 | Muhammad Ihsan Widodo | — | QA |
+| Muhammad Azmi Pasagama | — | UI/UX |
 ---
 
 ## 📄 Lisensi
