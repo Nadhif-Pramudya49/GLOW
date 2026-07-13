@@ -355,9 +355,6 @@ function renderKategoriPopuler() {
   sec.innerHTML = `
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2rem">
       <h2 style="font-family:'Playfair Display', serif; font-size:2rem; color:var(--gray-800); margin:0;">Kategori Populer</h2>
-      <a href="#" style="color:var(--gray-600); text-decoration:none; font-size:0.95rem; display:inline-flex; align-items:center; gap:0.5rem; font-weight:500;">
-        Lihat Semua <svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
-      </a>
     </div>
     <div class="grid-4" style="gap:1.5rem">
       <!-- Card 1 -->
