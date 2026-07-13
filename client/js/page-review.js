@@ -145,16 +145,17 @@ function renderReviewForm() {
         items = selectedBooking.package.customData;
       } else {
         // Mock bookings have penginapan, workspaces, activities directly on package
-        if (selectedBooking.package.penginapan) items.push(selectedBooking.package.penginapan);
-        if (selectedBooking.package.workspaces) items = items.concat(selectedBooking.package.workspaces);
-        if (selectedBooking.package.activities) items = items.concat(selectedBooking.package.activities);
+        if (selectedBooking.package.penginapan && Object.keys(selectedBooking.package.penginapan).length > 0) items.push({...selectedBooking.package.penginapan, type: 'accommodation'});
+        if (selectedBooking.package.workspaces) items = items.concat(selectedBooking.package.workspaces.map(w => ({...w, type: 'workspace'})));
+        if (selectedBooking.package.transport) items.push({...selectedBooking.package.transport, type: 'transport'});
+        if (selectedBooking.package.activities) items = items.concat(selectedBooking.package.activities.map(a => ({...a, type: 'activity'})));
       }
 
       if (Array.isArray(items) && items.length > 0) {
         items.forEach((item, index) => {
-          let typeLabel = 'Aktivitas';
+          let typeLabel = 'Wisata';
           if (item.type === 'accommodation') typeLabel = 'Penginapan';
-          else if (item.type === 'workspace') typeLabel = 'Workspace / Cafe';
+          else if (item.type === 'workspace') typeLabel = 'Cafe / Workspace';
           else if (item.type === 'transport') typeLabel = 'Transportasi';
           
           dynamicCategories.push({
