@@ -145,7 +145,13 @@ function renderReviewForm() {
         items = selectedBooking.package.customData;
       } else {
         // Mock bookings have penginapan, workspaces, activities directly on package
-        if (selectedBooking.package.penginapan && Object.keys(selectedBooking.package.penginapan).length > 0) items.push({...selectedBooking.package.penginapan, type: 'accommodation'});
+        if (selectedBooking.package.penginapan) {
+          if (Array.isArray(selectedBooking.package.penginapan)) {
+            items = items.concat(selectedBooking.package.penginapan.map(p => ({...p, type: 'accommodation'})));
+          } else if (Object.keys(selectedBooking.package.penginapan).length > 0) {
+            items.push({...selectedBooking.package.penginapan, type: 'accommodation'});
+          }
+        }
         if (selectedBooking.package.workspaces) items = items.concat(selectedBooking.package.workspaces.map(w => ({...w, type: 'workspace'})));
         if (selectedBooking.package.transport) items.push({...selectedBooking.package.transport, type: 'transport'});
         if (selectedBooking.package.activities) items = items.concat(selectedBooking.package.activities.map(a => ({...a, type: 'activity'})));
@@ -442,6 +448,33 @@ async function submitReview() {
     tags: reviewState.tags,
     itemRatings: itemRatings
   };
+
+  if (String(reviewState.selectedBookingId).startsWith('BK-')) {
+    // Mock review submission for local mock bookings
+    const localMockStr = localStorage.getItem('glow_mock_bookings');
+    if (localMockStr) {
+      let localMocks = JSON.parse(localMockStr);
+      let mockBooking = localMocks.find(b => b.id == reviewState.selectedBookingId);
+      if (mockBooking) {
+        mockBooking.review = { ...payload, id: Date.now() };
+        localStorage.setItem('glow_mock_bookings', JSON.stringify(localMocks));
+      }
+    }
+    
+    reviewState.previewCard = {
+      name: State.user ? State.user.fullName : 'Kamu',
+      avatar: State.user ? State.user.fullName.substring(0,2).toUpperCase() : 'KM',
+      color: '#1a4a3a',
+      rating: reviewState.overallRating,
+      date: new Date().toLocaleDateString('id-ID'),
+      text: reviewState.reviewText || 'Pengalaman workation yang luar biasa!',
+      tags: reviewState.tags,
+    };
+    reviewState.submitted = true;
+    showToast('✅ Ulasan berhasil dikirim!');
+    renderApp();
+    return;
+  }
 
   try {
     await window.ReviewService.submitReview(payload);
