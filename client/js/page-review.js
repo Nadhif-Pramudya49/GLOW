@@ -196,6 +196,7 @@ function renderReviewForm() {
       </select>
     </div>
 
+    ${reviewState.selectedBookingId ? `
     <div style="margin-bottom:1.5rem">
       <label class="form-label" style="border-bottom:1px solid var(--gray-200); padding-bottom:8px; display:block; margin-bottom:12px;">Beri Rating pada Tempat / Layanan Berikut:</label>
       ${dynamicCategories.map(cat=>`
@@ -208,7 +209,7 @@ function renderReviewForm() {
               
               <div style="display:flex; justify-content:space-between; align-items:center; margin-top:0.75rem;">
                 <div class="star-input" style="font-size:2rem; justify-content:flex-end; gap:8px;">
-                  ${[5,4,3,2,1].map(n=>`<span class="${n<=(reviewState.ratings[cat.key]||0)?'active':''}" onclick="reviewState.ratings['${cat.key}']=${n};reviewState.dynamicCats = ${JSON.stringify(dynamicCategories).replace(/"/g, '&quot;')};renderApp()" style="text-shadow:0 2px 4px rgba(0,0,0,0.05);">★</span>`).join('')}
+                  ${[5,4,3,2,1].map(n=>`<span class="${n<=(reviewState.ratings[cat.key]||0)?'active':''}" onclick="reviewState.ratings['${cat.key}']=${n};renderApp()" style="text-shadow:0 2px 4px rgba(0,0,0,0.05);">★</span>`).join('')}
                 </div>
                 <div style="font-weight:800; font-size:1.75rem; color:var(--green)">
                   ${reviewState.ratings[cat.key]||0}<span style="font-size:1rem;color:var(--gray-400);font-weight:500;">/5</span>
@@ -244,6 +245,11 @@ function renderReviewForm() {
       <button class="btn btn-ghost btn-lg" style="flex:1" onclick="previewReview()"><svg style="width:18px;height:18px;display:inline-block;vertical-align:bottom;margin-right:6px;" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg> Preview</button>
       <button class="btn btn-primary btn-lg" style="flex:1" onclick="submitReview()">Kirim Ulasan</button>
     </div>
+    ` : `
+    <div style="padding:2rem;text-align:center;background:var(--gray-50);border-radius:12px;border:1px dashed var(--gray-300);color:var(--gray-500);">
+      Pilih riwayat pesanan dari daftar <i>dropdown</i> di atas untuk mulai memberikan ulasan.
+    </div>
+    `}
   `;
   return card;
 }
@@ -530,6 +536,7 @@ async function submitReview() {
         tags: reviewState.tags,
       };
       reviewState.submitted = true;
+      reviewState.selectedBookingId = '';
       showToast('✅ Ulasan berhasil dikirim!');
       renderApp();
       return;
@@ -548,6 +555,7 @@ async function submitReview() {
       tags: reviewState.tags,
     };
     reviewState.submitted = true;
+    reviewState.selectedBookingId = '';
     showToast('✅ Ulasan berhasil dikirim!');
     renderApp();
   } catch (error) {
