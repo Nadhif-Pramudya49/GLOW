@@ -449,31 +449,28 @@ async function submitReview() {
     itemRatings: itemRatings
   };
 
-  if (String(reviewState.selectedBookingId).startsWith('BK-')) {
-    // Mock review submission for local mock bookings
-    const localMockStr = localStorage.getItem('glow_mock_bookings');
-    if (localMockStr) {
-      let localMocks = JSON.parse(localMockStr);
-      let mockBooking = localMocks.find(b => b.id == reviewState.selectedBookingId);
-      if (mockBooking) {
-        mockBooking.review = { ...payload, id: Date.now() };
-        localStorage.setItem('glow_mock_bookings', JSON.stringify(localMocks));
-      }
+  const localMockStr = localStorage.getItem('glow_mock_bookings');
+  if (localMockStr) {
+    let localMocks = JSON.parse(localMockStr);
+    let mockBooking = localMocks.find(b => b.id == reviewState.selectedBookingId);
+    if (mockBooking) {
+      mockBooking.review = { ...payload, id: Date.now() };
+      localStorage.setItem('glow_mock_bookings', JSON.stringify(localMocks));
+      
+      reviewState.previewCard = {
+        name: State.user ? State.user.fullName : 'Kamu',
+        avatar: State.user ? State.user.fullName.substring(0,2).toUpperCase() : 'KM',
+        color: '#1a4a3a',
+        rating: reviewState.overallRating,
+        date: new Date().toLocaleDateString('id-ID'),
+        text: reviewState.reviewText || 'Pengalaman workation yang luar biasa!',
+        tags: reviewState.tags,
+      };
+      reviewState.submitted = true;
+      showToast('✅ Ulasan berhasil dikirim!');
+      renderApp();
+      return;
     }
-    
-    reviewState.previewCard = {
-      name: State.user ? State.user.fullName : 'Kamu',
-      avatar: State.user ? State.user.fullName.substring(0,2).toUpperCase() : 'KM',
-      color: '#1a4a3a',
-      rating: reviewState.overallRating,
-      date: new Date().toLocaleDateString('id-ID'),
-      text: reviewState.reviewText || 'Pengalaman workation yang luar biasa!',
-      tags: reviewState.tags,
-    };
-    reviewState.submitted = true;
-    showToast('✅ Ulasan berhasil dikirim!');
-    renderApp();
-    return;
   }
 
   try {
