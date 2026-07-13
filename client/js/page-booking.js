@@ -1574,16 +1574,13 @@ async function confirmPayment() {
     // Call backend API
     let result;
     try {
-      if (!bookingState.isProdMode) {
-        throw new Error('API Error: Mocking mode active');
-      }
       result = await BookingService.createBooking(payload);
       if (!result || (!result.booking && !result.id)) {
         throw new Error('API Error: Invalid response format');
       }
     } catch (e) {
       // Fallback for demo/testing if token is invalid or server is unreachable
-      if (e.message.includes('API Error') || e.message.includes('Unauthorized') || e.message.includes('Failed to fetch') || !bookingState.isProdMode) {
+      if (e.message.includes('API Error') || e.message.includes('Unauthorized') || e.message.includes('Failed to fetch')) {
         console.warn('Falling back to mock booking success.', e.message);
         result = { booking: { id: Math.floor(Math.random() * 10000) } };
         
