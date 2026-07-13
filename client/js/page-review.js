@@ -139,18 +139,28 @@ function renderReviewForm() {
     let dynamicCategories = [];
     const selectedBooking = reviewState.myBookings.find(b => b.id == reviewState.selectedBookingId);
     
-    if (selectedBooking && selectedBooking.package && selectedBooking.package.customData) {
-      // Create dynamic categories based on customData items
-      const items = selectedBooking.package.customData;
-      items.forEach((item, index) => {
-        dynamicCategories.push({
-          key: `item_${index}`,
-          label: `${item.type === 'accommodation' ? 'Penginapan' : item.type === 'workspace' ? 'Workspace' : item.type === 'transport' ? 'Transportasi' : 'Aktivitas'}: ${item.name || item.brand || item.title || 'Item'}`,
-          itemId: item.id || `idx_${index}`,
-          itemName: item.name || item.brand || item.title || 'Item',
-          itemType: item.type
+    if (selectedBooking && selectedBooking.package) {
+      let items = [];
+      if (selectedBooking.package.customData) {
+        items = selectedBooking.package.customData;
+      } else {
+        // Mock bookings have penginapan, workspaces, activities directly on package
+        if (selectedBooking.package.penginapan) items.push(selectedBooking.package.penginapan);
+        if (selectedBooking.package.workspaces) items = items.concat(selectedBooking.package.workspaces);
+        if (selectedBooking.package.activities) items = items.concat(selectedBooking.package.activities);
+      }
+
+      if (Array.isArray(items) && items.length > 0) {
+        items.forEach((item, index) => {
+          dynamicCategories.push({
+            key: `item_${index}`,
+            label: `${item.type === 'accommodation' ? 'Penginapan' : item.type === 'workspace' ? 'Workspace' : item.type === 'transport' ? 'Transportasi' : 'Aktivitas'}: ${item.name || item.brand || item.title || 'Item'}`,
+            itemId: item.id || `idx_${index}`,
+            itemName: item.name || item.brand || item.title || 'Item',
+            itemType: item.type
+          });
         });
-      });
+      }
     }
 
     if (dynamicCategories.length === 0) {
@@ -169,22 +179,31 @@ function renderReviewForm() {
     </div>
 
     <div style="margin-bottom:1.5rem">
-      <label class="form-label">Rating Keseluruhan</label>
-      <div class="star-input" id="overall-stars">
-        ${[1,2,3,4,5].map(n=>`<span class="${n<=reviewState.overallRating?'active':''}" onclick="setOverallRating(${n})">★</span>`).join('')}
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <div>
+          <label class="form-label" style="margin-bottom:4px;">Rating Keseluruhan</label>
+          <div class="star-input" id="overall-stars" style="font-size:1.75rem; justify-content:flex-end;">
+            ${[5,4,3,2,1].map(n=>`<span class="${n<=reviewState.overallRating?'active':''}" onclick="setOverallRating(${n})">★</span>`).join('')}
+          </div>
+        </div>
+        <div style="font-weight:800; font-size:1.5rem; color:var(--green)">
+          ${reviewState.overallRating}<span style="font-size:1rem;color:var(--gray-400)">/5</span>
+        </div>
       </div>
     </div>
 
     <div style="margin-bottom:1.5rem">
-      <label class="form-label">Rating per Item / Kategori</label>
+      <label class="form-label" style="border-bottom:1px solid var(--gray-200); padding-bottom:8px; display:block; margin-bottom:12px;">Rating per Item / Kategori</label>
       ${dynamicCategories.map(cat=>`
-        <div style="margin-bottom:0.875rem">
-          <div style="display:flex;justify-content:space-between;margin-bottom:4px;font-size:0.875rem">
-            <span style="font-weight:500">${cat.label}</span>
-            <span style="font-weight:700;color:var(--green)">${reviewState.ratings[cat.key]||0}/5</span>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+          <div>
+            <div style="font-weight:600; font-size:0.9rem; margin-bottom:4px; color:var(--gray-800);">${cat.label}</div>
+            <div class="star-input" style="font-size:1.5rem; justify-content:flex-end;">
+              ${[5,4,3,2,1].map(n=>`<span class="${n<=(reviewState.ratings[cat.key]||0)?'active':''}" onclick="reviewState.ratings['${cat.key}']=${n};reviewState.dynamicCats = ${JSON.stringify(dynamicCategories).replace(/"/g, '&quot;')};renderApp()">★</span>`).join('')}
+            </div>
           </div>
-          <div class="star-input" style="font-size:1.5rem; gap:4px">
-            ${[1,2,3,4,5].map(n=>`<span class="${n<=(reviewState.ratings[cat.key]||0)?'active':''}" onclick="reviewState.ratings['${cat.key}']=${n};reviewState.dynamicCats = ${JSON.stringify(dynamicCategories).replace(/"/g, '&quot;')};renderApp()">★</span>`).join('')}
+          <div style="font-weight:800; font-size:1.25rem; color:var(--green)">
+            ${reviewState.ratings[cat.key]||0}<span style="font-size:0.875rem;color:var(--gray-400)">/5</span>
           </div>
         </div>
       `).join('')}
