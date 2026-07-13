@@ -20,8 +20,8 @@ function renderReviewPage() {
     if (window.BookingService) {
       BookingService.getMyBookings().then(res => {
         if (Array.isArray(res)) {
-          // Filter only completed bookings for review
-          reviewState.myBookings = res.filter(b => b.status === 'COMPLETED' || new Date(b.endDate) < new Date());
+          // Allow reviewing any booking that hasn't been reviewed yet (for testing purposes & real usage)
+          reviewState.myBookings = res.filter(b => !b.review);
         }
         renderApp();
       });
@@ -101,14 +101,35 @@ function renderReviewForm() {
     return card;
   }
 
-  card.innerHTML = `
+    let dynamicCategories = [];
+    const selectedBooking = reviewState.myBookings.find(b => b.id == reviewState.selectedBookingId);
+    
+    if (selectedBooking && selectedBooking.package && selectedBooking.package.customData) {
+      // Create dynamic categories based on customData items
+      const items = selectedBooking.package.customData;
+      items.forEach((item, index) => {
+        dynamicCategories.push({
+          key: \`item_\${index}\`,
+          label: \`\${item.type === 'accommodation' ? 'Penginapan' : item.type === 'workspace' ? 'Workspace' : item.type === 'transport' ? 'Transportasi' : 'Aktivitas'}: \${item.name || item.brand || item.title || 'Item'}\`,
+          itemId: item.id || \`idx_\${index}\`,
+          itemName: item.name || item.brand || item.title || 'Item',
+          itemType: item.type
+        });
+      });
+    }
+
+    if (dynamicCategories.length === 0) {
+      dynamicCategories = RATING_CATS; // fallback
+    }
+
+    card.innerHTML = `
     <h2 style="font-size:1.25rem;font-weight:800;color:var(--green-dark);margin-bottom:1.5rem"><svg style="width:24px;height:24px;display:inline-block;vertical-align:bottom;margin-right:8px;color:var(--green);" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg> Tulis Ulasan</h2>
 
     <div class="form-group">
       <label class="form-label">Booking yang Dikunjungi</label>
       <select class="form-input" onchange="reviewState.selectedBookingId=this.value;renderApp()">
         <option value="">Pilih Booking</option>
-        ${reviewState.myBookings.map(b=>`<option value="${b.id}" ${reviewState.selectedBookingId==b.id?'selected':''}>${b.package?.location?.name || 'Lokasi'} - ${new Date(b.startDate).toLocaleDateString()}</option>`).join('')}
+        ${reviewState.myBookings.map(b=>`<option value="${b.id}" ${reviewState.selectedBookingId==b.id?'selected':''}>${b.package?.packageName || b.package?.location?.name || 'Paket'} - ${new Date(b.startDate).toLocaleDateString()}</option>`).join('')}
       </select>
     </div>
 
@@ -120,15 +141,15 @@ function renderReviewForm() {
     </div>
 
     <div style="margin-bottom:1.5rem">
-      <label class="form-label">Rating per Kategori</label>
-      ${RATING_CATS.map(cat=>`
+      <label class="form-label">Rating per Item / Kategori</label>
+      ${dynamicCategories.map(cat=>`
         <div style="margin-bottom:0.875rem">
           <div style="display:flex;justify-content:space-between;margin-bottom:4px;font-size:0.875rem">
             <span style="font-weight:500">${cat.label}</span>
             <span style="font-weight:700;color:var(--green)">${reviewState.ratings[cat.key]||0}/5</span>
           </div>
           <div class="star-input" style="font-size:1.5rem; gap:4px">
-            ${[1,2,3,4,5].map(n=>`<span class="${n<=(reviewState.ratings[cat.key]||0)?'active':''}" onclick="reviewState.ratings['${cat.key}']=${n};renderApp()">★</span>`).join('')}
+            ${[1,2,3,4,5].map(n=>`<span class="${n<=(reviewState.ratings[cat.key]||0)?'active':''}" onclick="reviewState.ratings['${cat.key}']=${n};reviewState.dynamicCats = ${JSON.stringify(dynamicCategories).replace(/"/g, '&quot;')};renderApp()">★</span>`).join('')}
           </div>
         </div>
       `).join('')}
@@ -323,6 +344,21 @@ async function submitReview() {
   if (!reviewState.selectedBookingId) { showToast('⚠️ Pilih booking terlebih dahulu!'); return; }
   if (!reviewState.overallRating) { showToast('⚠️ Berikan rating keseluruhan dulu!'); return; }
   
+  // Collect dynamic ratings if any
+  const itemRatings = [];
+  if (reviewState.dynamicCats) {
+    reviewState.dynamicCats.forEach(cat => {
+      if (reviewState.ratings[cat.key]) {
+        itemRatings.push({
+          itemId: cat.itemId,
+          itemName: cat.itemName,
+          itemType: cat.itemType,
+          rating: reviewState.ratings[cat.key]
+        });
+      }
+    });
+  }
+
   const payload = {
     bookingId: reviewState.selectedBookingId,
     rating: reviewState.overallRating,
@@ -330,7 +366,8 @@ async function submitReview() {
     workspaceRating: reviewState.ratings.kenyamanan || reviewState.overallRating,
     ambienceRating: reviewState.ratings.suasana || reviewState.overallRating,
     comment: reviewState.reviewText,
-    tags: reviewState.tags
+    tags: reviewState.tags,
+    itemRatings: itemRatings
   };
 
   try {

@@ -9,7 +9,8 @@ exports.getMyBookings = async (req, res) => {
       include: {
         package: {
           include: { location: true }
-        }
+        },
+        review: true
       },
       orderBy: { id: 'desc' }
     });

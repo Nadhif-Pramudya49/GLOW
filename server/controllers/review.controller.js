@@ -45,7 +45,8 @@ exports.createReview = async (req, res) => {
         ambienceRating: parseInt(ambienceRating || rating),
         comment: comment || '',
         tags: req.body.tags || [],
-        photos: req.body.photos || []
+        photos: req.body.photos || [],
+        itemRatings: req.body.itemRatings || []
       }
     });
 
