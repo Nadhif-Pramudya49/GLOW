@@ -107,7 +107,7 @@ function renderReviewForm() {
     <div class="form-group">
       <label class="form-label">Booking yang Dikunjungi</label>
       <select class="form-input" onchange="reviewState.selectedBookingId=this.value;renderApp()">
-        <option value="">-- Pilih Booking --</option>
+        <option value="">Pilih Booking</option>
         ${reviewState.myBookings.map(b=>`<option value="${b.id}" ${reviewState.selectedBookingId==b.id?'selected':''}>${b.package?.location?.name || 'Lokasi'} - ${new Date(b.startDate).toLocaleDateString()}</option>`).join('')}
       </select>
     </div>
