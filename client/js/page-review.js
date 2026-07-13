@@ -19,18 +19,31 @@ function renderReviewPage() {
 
   if (reviewState.myBookings === null) {
     isLoading = true;
+    
+    // Get mock bookings from localStorage (used in demo/testing checkout)
+    const localMockStr = localStorage.getItem('glow_mock_bookings');
+    let localMocks = [];
+    if (localMockStr) {
+      localMocks = JSON.parse(localMockStr).filter(b => !b.review);
+    }
+    
     if (window.BookingService) {
       BookingService.getMyBookings().then(res => {
-        if (Array.isArray(res)) {
-          // Allow reviewing any booking that hasn't been reviewed yet (for testing purposes & real usage)
-          reviewState.myBookings = res.filter(b => !b.review);
-        } else {
-          reviewState.myBookings = [];
-        }
+        let bookings = [];
+        if (Array.isArray(res)) bookings = res;
+        else if (res && Array.isArray(res.data)) bookings = res.data;
+        
+        bookings = bookings.concat(localMocks);
+        
+        // Allow reviewing any booking that hasn't been reviewed yet
+        reviewState.myBookings = bookings.filter(b => !b.review);
         renderApp();
-      }).catch(() => { reviewState.myBookings = []; renderApp(); });
+      }).catch(() => { 
+        reviewState.myBookings = localMocks; 
+        renderApp(); 
+      });
     } else {
-      reviewState.myBookings = [];
+      reviewState.myBookings = localMocks;
     }
   }
 
