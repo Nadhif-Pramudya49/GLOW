@@ -1590,6 +1590,7 @@ async function confirmPayment() {
         // Save to local storage so it shows up in Order History
         const mockBooking = {
           id: result.booking.id,
+          userId: State.user ? State.user.id : null,
           status: 'PAID',
           package: { ...JSON.parse(JSON.stringify(State.package)), packageName: 'Paket Workation' },
           startDate: payload.startDate,

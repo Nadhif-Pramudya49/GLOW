@@ -273,6 +273,15 @@ window.renderAdminTab = async (tab, data = null) => {
       const container = document.getElementById('user-detail-container');
       if (!container) return;
 
+      // Inject local mocks for demo consistency
+      const localMockStr = localStorage.getItem('glow_mock_bookings');
+      if (localMockStr) {
+        let localMocks = JSON.parse(localMockStr);
+        let userMocks = localMocks.filter(m => m.userId === user.id || !m.userId);
+        if (!user.bookings) user.bookings = [];
+        user.bookings = user.bookings.concat(userMocks);
+      }
+
       const joinDate = new Date(user.createdAt).toLocaleDateString('id-ID', { day:'numeric', month:'long', year:'numeric' });
       
       container.style.padding = '0';
@@ -399,12 +408,12 @@ window.renderAdminTab = async (tab, data = null) => {
         const bookingRows = (user.bookings && user.bookings.length > 0) ? user.bookings.map(b => `
           <div style="padding:1rem; border:1px solid var(--gray-200); border-radius:8px; margin-bottom:0.75rem; display:flex; justify-content:space-between; align-items:center; background:white;">
             <div>
-              <div style="font-weight:700; margin-bottom:0.25rem; font-size:1rem;">${b.package.name}</div>
-              <div style="font-size:0.875rem; color:var(--gray-500);">${b.location ? b.location.name : 'Unknown Location'} • ${new Date(b.createdAt || b.startDate).toLocaleDateString('id-ID')}</div>
+              <div style="font-weight:700; margin-bottom:0.25rem; font-size:1rem;">${b.package?.name || b.package?.packageName || 'Paket Workation'}</div>
+              <div style="font-size:0.875rem; color:var(--gray-500);">${(b.location && b.location.name) ? b.location.name : (b.package?.location?.name || 'GLOW Network')} • ${new Date(b.createdAt || b.startDate).toLocaleDateString('id-ID')}</div>
             </div>
             <div style="text-align:right;">
               <div style="font-weight:700; color:var(--green); margin-bottom:0.25rem; font-size:1rem;">Rp ${Number(b.totalPrice).toLocaleString('id-ID')}</div>
-              <span style="font-size:0.75rem; font-weight:600; padding:4px 8px; border-radius:4px; background:${b.status==='COMPLETED'?'rgba(15,118,110,0.1)':'var(--gray-100)'}; color:${b.status==='COMPLETED'?'var(--green)':'var(--gray-600)'};">${b.status}</span>
+              <span style="font-size:0.75rem; font-weight:600; padding:4px 8px; border-radius:4px; background:${b.status==='COMPLETED'||b.status==='PAID'?'rgba(15,118,110,0.1)':'var(--gray-100)'}; color:${b.status==='COMPLETED'||b.status==='PAID'?'var(--green)':'var(--gray-600)'};">${b.status}</span>
             </div>
           </div>
         `).join('') : '<div style="color:var(--gray-500); font-size:0.875rem; padding:1.5rem; text-align:center; background:var(--gray-50); border-radius:8px; border:1px dashed var(--gray-300);">Belum ada riwayat booking.</div>';
