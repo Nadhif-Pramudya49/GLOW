@@ -15,29 +15,51 @@ let reviewState = {
 const REVIEW_TAGS = ['Recommended','Bakal Balik Lagi','Untuk Solo','Untuk Tim','Budget-Friendly','Premium'];
 
 function renderReviewPage() {
+  let isLoading = false;
+
   if (reviewState.myBookings === null) {
-    reviewState.myBookings = [];
+    isLoading = true;
     if (window.BookingService) {
       BookingService.getMyBookings().then(res => {
         if (Array.isArray(res)) {
           // Allow reviewing any booking that hasn't been reviewed yet (for testing purposes & real usage)
           reviewState.myBookings = res.filter(b => !b.review);
+        } else {
+          reviewState.myBookings = [];
         }
         renderApp();
-      });
+      }).catch(() => { reviewState.myBookings = []; renderApp(); });
+    } else {
+      reviewState.myBookings = [];
     }
   }
 
   if (reviewState.recentReviews === null) {
-    reviewState.recentReviews = [];
+    isLoading = true;
     if (window.ReviewService && window.ReviewService.getRecentReviews) {
       ReviewService.getRecentReviews().then(res => {
         if (Array.isArray(res)) {
           reviewState.recentReviews = res;
+        } else {
+          reviewState.recentReviews = [];
         }
         renderApp();
-      });
+      }).catch(() => { reviewState.recentReviews = []; renderApp(); });
+    } else {
+      reviewState.recentReviews = [];
     }
+  }
+
+  if (isLoading || reviewState.myBookings === null || reviewState.recentReviews === null) {
+    const page = el('div', 'page fade-in');
+    page.innerHTML = `
+      <div style="display:flex; justify-content:center; align-items:center; height:80vh; flex-direction:column; gap:1rem;">
+        <div style="width:40px; height:40px; border:4px solid var(--gray-200); border-top-color:var(--green); border-radius:50%; animation:spin 1s linear infinite;"></div>
+        <div style="color:var(--gray-500); font-weight:500;">Memuat ulasan...</div>
+      </div>
+      <style>@keyframes spin { to { transform: rotate(360deg); } }</style>
+    `;
+    return page;
   }
 
   const page = el('div', 'page fade-in');
@@ -109,9 +131,9 @@ function renderReviewForm() {
       const items = selectedBooking.package.customData;
       items.forEach((item, index) => {
         dynamicCategories.push({
-          key: \`item_\${index}\`,
-          label: \`\${item.type === 'accommodation' ? 'Penginapan' : item.type === 'workspace' ? 'Workspace' : item.type === 'transport' ? 'Transportasi' : 'Aktivitas'}: \${item.name || item.brand || item.title || 'Item'}\`,
-          itemId: item.id || \`idx_\${index}\`,
+          key: `item_${index}`,
+          label: `${item.type === 'accommodation' ? 'Penginapan' : item.type === 'workspace' ? 'Workspace' : item.type === 'transport' ? 'Transportasi' : 'Aktivitas'}: ${item.name || item.brand || item.title || 'Item'}`,
+          itemId: item.id || `idx_${index}`,
           itemName: item.name || item.brand || item.title || 'Item',
           itemType: item.type
         });

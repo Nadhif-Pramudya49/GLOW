@@ -71,7 +71,10 @@ function renderProductivityPage() {
     localMocks = JSON.parse(localMockStr).filter(b => ['PENDING', 'CONFIRMED', 'PAID'].includes((b.status || '').toUpperCase()));
   }
 
+  let isLoading = false;
+
   if (prodState.myBookings === null || (prodState.myBookings.length === 0 && localMocks.length > 0)) {
+    isLoading = true;
     prodState.myBookings = localMocks;
     if (window.BookingService) {
       BookingService.getMyBookings().then(res => {
@@ -105,6 +108,18 @@ function renderProductivityPage() {
       }
     });
     prodState.myBookings.sort((a,b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+  }
+
+  if (isLoading || prodState.myBookings === null) {
+    const page = el('div', 'page fade-in');
+    page.innerHTML = `
+      <div style="display:flex; justify-content:center; align-items:center; height:80vh; flex-direction:column; gap:1rem;">
+        <div style="width:40px; height:40px; border:4px solid var(--gray-200); border-top-color:var(--green); border-radius:50%; animation:spin 1s linear infinite;"></div>
+        <div style="color:var(--gray-500); font-weight:500;">Memuat productivity mode...</div>
+      </div>
+      <style>@keyframes spin { to { transform: rotate(360deg); } }</style>
+    `;
+    return page;
   }
 
   if (prodState.myBookings.length > 0 && !prodState.selectedBookingId) {
